@@ -57,12 +57,21 @@ body {
 .logo-text {
     font-family: 'Orbitron', sans-serif;
     font-weight: 900;
-    letter-spacing: 2px;
     font-size: 1.1rem;
+    letter-spacing: 1px;
 }
 
-.logo-text span {
+.accent-o {
     color: var(--accent-orange);
+}
+
+.v-tag {
+    font-size: 0.6rem;
+    font-weight: 400;
+    color: var(--text-secondary);
+    margin-left: 5px;
+    vertical-align: middle;
+    font-family: 'Inter', sans-serif;
 }
 
 .icon-btn {
