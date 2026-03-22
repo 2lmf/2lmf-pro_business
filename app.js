@@ -1,18 +1,18 @@
 /**
  * 2LMF PRO BUSINESS - FRONTEND CORE 🦈🚀
+ * Verzija: 2.5 (Real Revenue + Editable Products)
  */
 
 const GAS_URL = "https://script.google.com/macros/s/AKfycbx4TQ6cFNr8X-fNRHE0Ai571pAioDeny_mSSrTVQm3OHbTKOhfIEDiKDFM2shZ5zDFLrA/exec";
 
 let state = {
     inquiries: [],
-    stats: { revenue: 0, expenses: 0, inquiriesCount: 0, yearlyStats: [], monthlyStats: [], recentActivities: [] },
-    selectedInquiryId: null,
+    stats: { revenue: 0, expenses: 0, offerEstimation: 0, inquiriesCount: 0, yearlyStats: [], monthlyStats: [], recentActivities: [] },
+    selectedInquiry: null,
     charts: { yearly: null, monthly: null }
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("🚀 Aplikacija inicijalizirana.");
     initNavigation();
     initScanner();
     initModal();
@@ -28,6 +28,10 @@ function initNavigation() {
             switchTab(tabId);
         });
     });
+
+    document.getElementById('inquirySearch').addEventListener('input', (e) => {
+        filterInquiries(e.target.value);
+    });
 }
 
 function switchTab(tabId) {
@@ -35,72 +39,45 @@ function switchTab(tabId) {
     document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
     document.getElementById(`tab-${tabId}`).classList.add('active');
-
-    // Provjeri trebaju li se grafikoni ponovno iscrtati (Resize fix)
-    if (tabId === 'dashboard') {
-        updateCharts();
-    }
+    if (tabId === 'dashboard') setTimeout(updateCharts, 200);
 }
 
 // --- DATA SYNC ---
 async function refreshData() {
-    console.log("🔄 Osvježavam podatke s GAS...");
     showLoader("Učitavanje...");
     try {
-        // Dodajemo cache buster kako bismo izbjegli stare podatke
         const response = await fetch(`${GAS_URL}?action=get_dashboard_data&cb=${Date.now()}`);
-        if (!response.ok) throw new Error("Mrežna greška (Status " + response.status + ")");
-
         const result = await response.json();
-        console.log("✅ Podaci primljeni:", result);
-
         if (result.status === "success") {
             state.inquiries = result.inquiries || [];
             state.stats = result.stats || state.stats;
-
             renderDashboard();
             renderInquiries();
-            // Charts will be updated inside renderDashboard or via delay
-            setTimeout(updateCharts, 100);
-        } else {
-            console.error("❌ Greška u backendu:", result.message);
+            setTimeout(updateCharts, 300);
         }
-    } catch (err) {
-        console.error("❌ Fetch Error:", err);
-    } finally {
-        hideLoader();
-    }
+    } catch (err) { console.error("Error:", err); } finally { hideLoader(); }
 }
 
 // --- RENDERERS ---
 function renderDashboard() {
     const stats = state.stats;
-    document.getElementById('monthlyRevenue').innerText = formatCurrency(stats.revenue || 0);
-    document.getElementById('monthlyExpenses').innerText = formatCurrency(stats.expenses || 0);
-    document.getElementById('openInquiries').innerText = stats.inquiriesCount || 0;
-    document.getElementById('estimatedProfit').innerText = formatCurrency((stats.revenue || 0) - (stats.expenses || 0));
+    document.getElementById('monthlyRevenue').innerText = formatCurrency(stats.revenue);
+    document.getElementById('monthlyExpenses').innerText = formatCurrency(stats.expenses);
+    document.getElementById('offerEstimation').innerText = formatCurrency(stats.offerEstimation);
+    document.getElementById('openInquiries').innerText = stats.inquiriesCount;
 
     const list = document.getElementById('activityList');
-    if (!list) return;
     list.innerHTML = '';
-
-    const activities = stats.recentActivities || [];
-    if (activities.length === 0) {
-        list.innerHTML = '<div class="item-meta">Nema nedavnih aktivnosti.</div>';
-    }
-
-    activities.forEach(item => {
+    (stats.recentActivities || []).forEach(item => {
         const div = document.createElement('div');
         div.className = 'inquiry-item';
-        const colorClass = item.vrsta === "IRA" ? "var(--success)" : "var(--accent-cyan)";
+        const color = item.vrsta === "IRA" ? "var(--success)" : "var(--accent-cyan)";
         div.innerHTML = `
             <div class="item-main">
-                <span class="item-title" style="color: ${colorClass}">${item.vrsta}: ${item.stranka}</span>
+                <span class="item-title" style="color:${color}">${item.vrsta}: ${item.stranka}</span>
                 <span class="item-meta">${item.datum} • ${item.opis}</span>
             </div>
-            <div class="item-action">
-                <b>${formatCurrency(item.iznos)}</b>
-            </div>
+            <div class="item-action"><b>${formatCurrency(item.iznos)}</b></div>
         `;
         list.appendChild(div);
     });
@@ -108,165 +85,182 @@ function renderDashboard() {
 
 function updateCharts() {
     const stats = state.stats;
-    if (!stats.yearlyStats || stats.yearlyStats.length === 0) return;
+    if (!stats.yearlyStats) return;
 
-    // Yearly Chart
-    const yearlyEl = document.getElementById('yearlyChart');
-    if (yearlyEl) {
-        const yearlyCtx = yearlyEl.getContext('2d');
-        if (state.charts.yearly) state.charts.yearly.destroy();
-        state.charts.yearly = new Chart(yearlyCtx, {
-            type: 'bar',
-            data: {
-                labels: ['S', 'V', 'O', 'T', 'S', 'L', 'S', 'K', 'R', 'L', 'S', 'P'], // Skraćeni nazivi mjeseci
-                datasets: [
-                    { label: 'Prihodi', data: stats.yearlyStats.map(m => m.revenue), backgroundColor: '#E67E22', borderRadius: 4 },
-                    { label: 'Troškovi', data: stats.yearlyStats.map(m => m.expenses), backgroundColor: '#00F2FF', borderRadius: 4 }
-                ]
-            },
-            options: chartOptions
-        });
-    }
+    // Yearly
+    const yCtx = document.getElementById('yearlyChart').getContext('2d');
+    if (state.charts.yearly) state.charts.yearly.destroy();
+    state.charts.yearly = new Chart(yCtx, {
+        type: 'bar',
+        data: {
+            labels: ['S', 'V', 'O', 'T', 'S', 'L', 'S', 'K', 'R', 'L', 'S', 'P'],
+            datasets: [
+                { label: 'Naplaćeno', data: stats.yearlyStats.map(m => m.revenue), backgroundColor: 'rgba(46, 204, 113, 0.8)', borderRadius: 5 },
+                { label: 'Isplaćeno', data: stats.yearlyStats.map(m => m.expenses), backgroundColor: 'rgba(0, 242, 255, 0.8)', borderRadius: 5 }
+            ]
+        },
+        options: chartOptions
+    });
 
-    // Monthly Chart
-    const monthlyEl = document.getElementById('monthlyChart');
-    if (monthlyEl && stats.monthlyStats) {
-        const monthlyCtx = monthlyEl.getContext('2d');
-        if (state.charts.monthly) state.charts.monthly.destroy();
-        state.charts.monthly = new Chart(monthlyCtx, {
-            type: 'bar',
-            data: {
-                labels: stats.monthlyStats.map(d => d.day),
-                datasets: [
-                    { label: 'Prihodi', data: stats.monthlyStats.map(d => d.revenue), backgroundColor: '#E67E22' },
-                    { label: 'Troškovi', data: stats.monthlyStats.map(d => d.expenses), backgroundColor: '#00F2FF' }
-                ]
-            },
-            options: chartOptions
-        });
-    }
+    // Monthly
+    const mCtx = document.getElementById('monthlyChart').getContext('2d');
+    if (state.charts.monthly) state.charts.monthly.destroy();
+    state.charts.monthly = new Chart(mCtx, {
+        type: 'bar',
+        data: {
+            labels: stats.monthlyStats.map(d => d.day),
+            datasets: [
+                { label: 'Prihodi', data: stats.monthlyStats.map(d => d.revenue), backgroundColor: 'rgba(46, 204, 113, 0.7)' },
+                { label: 'Troškovi', data: stats.monthlyStats.map(d => d.expenses), backgroundColor: 'rgba(0, 242, 255, 0.7)' }
+            ]
+        },
+        options: chartOptions
+    });
 }
 
 const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
+    responsive: true, maintainAspectRatio: false,
     scales: {
-        y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#888899', font: { size: 9 } } },
-        x: { grid: { display: false }, ticks: { color: '#888899', font: { size: 9 } } }
+        y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#889', font: { size: 10 } } },
+        x: { grid: { display: false }, ticks: { color: '#889', font: { size: 10 } } }
     },
-    plugins: {
-        legend: { display: false },
-        tooltip: {
-            backgroundColor: 'rgba(20, 20, 30, 0.9)',
-            titleColor: '#fff',
-            bodyColor: '#fff',
-            borderColor: 'rgba(255,255,255,0.1)',
-            borderWidth: 1
-        }
-    }
+    plugins: { legend: { display: false } }
 };
 
-function renderInquiries() {
+function renderInquiries(data = state.inquiries) {
     const list = document.getElementById('inquiryList');
-    if (!list) return;
     list.innerHTML = '';
-
-    if (state.inquiries.length === 0) {
-        list.innerHTML = '<div class="item-meta" style="padding: 20px; text-align:center;">Nema upita u tablici.</div>';
-    }
-
-    state.inquiries.forEach(item => {
+    data.forEach(item => {
         const div = document.createElement('div');
-        div.className = 'inquiry-item';
+        div.className = 'inquiry-item shadow-premium';
+        div.style.marginBottom = "12px";
         div.innerHTML = `
             <div class="item-main" onclick="handleInquiryAction('${item.id}')">
-                <span class="item-title">${item.name || "Nema imena"}</span>
-                <span class="item-meta">${item.id} • ${item.subject || "Upit"} • <b>${item.status || "NOVO"}</b></span>
-                <span class="item-meta">${item.amount || 0} €</span>
+                <span class="item-title">${item.name}</span>
+                <span class="item-meta">${item.id} • ${item.subject}</span>
+                <span class="item-meta">Status: <b style="color:var(--accent-orange)">${item.status}</b></span>
             </div>
-            <div class="item-actions-row" style="display:flex; gap:10px; margin-top:8px;">
-                <button class="btn-text" onclick="handleInquiryAction('${item.id}')" style="color:var(--accent-orange); font-size:0.75rem; font-weight:bold; letter-spacing: 0.5px;">DETALJI / PONUDA</button>
+            <div class="item-action" style="flex-direction:column; align-items:flex-end;">
+                <b style="font-size:1.1rem;">${formatCurrency(item.amount)}</b>
+                <button class="btn-text" style="color:var(--accent-cyan); margin-top:5px; font-weight:bold; font-size:0.75rem;">DETALJI / UREDI</button>
             </div>
         `;
         list.appendChild(div);
     });
 }
 
-// --- OCR & SCANNER ---
-function initScanner() {
-    const fileInput = document.getElementById('fileInput');
-    if (!fileInput) return;
-    fileInput.addEventListener('change', async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        showLoader("Analiza računa...");
-        try {
-            const base64 = await toBase64(file);
-            const content = base64.split(',')[1];
-            const response = await fetch(GAS_URL, {
-                method: 'POST',
-                mode: 'no-cors', // Sigurnije za GAS ali ne vidimo odgovor
-                body: JSON.stringify({ action: "analyzeReceipt", data: content, mimeType: file.type })
-            });
-            alert("Slika je poslana na analizu. Provjeri za par sekundi na dashboardu.");
-        } catch (err) { alert("Greška pri slanju!"); } finally { hideLoader(); }
+function filterInquiries(query) {
+    const q = query.toLowerCase();
+    const filtered = state.inquiries.filter(i =>
+        i.name.toLowerCase().includes(q) || i.id.toLowerCase().includes(q) || i.subject.toLowerCase().includes(q)
+    );
+    renderInquiries(filtered);
+}
+
+// --- EDITABLE MODAL LOGIC ---
+function handleInquiryAction(id) {
+    const item = state.inquiries.find(i => String(i.id) === String(id));
+    if (!item) return;
+    state.selectedInquiry = item;
+
+    document.getElementById('detName').innerText = item.name;
+    document.getElementById('detEmail').innerText = item.email;
+    document.getElementById('detAmount').innerText = formatCurrency(item.amount);
+
+    // Parse JSON
+    let products = [];
+    try {
+        const raw = JSON.parse(item.jsonData);
+        products = raw.stavke || [];
+    } catch (e) { console.error("JSON Error"); }
+
+    renderProductList(products);
+    document.getElementById('btnSaveChanges').style.display = "none";
+    document.getElementById('inquiryModal').classList.add('active');
+}
+
+function renderProductList(products) {
+    const list = document.getElementById('productList');
+    list.innerHTML = '';
+    if (products.length === 0) {
+        list.innerHTML = '<div class="item-meta">Nema definiranih stavki.</div>';
+        return;
+    }
+
+    products.forEach((p, idx) => {
+        const div = document.createElement('div');
+        div.className = 'p-item';
+        div.innerHTML = `
+            <div class="p-name">${p.naziv || p.name}</div>
+            <input type="number" class="p-input p-qty" value="${p.kolicina || p.qty}" onchange="updateProduct(${idx}, 'qty', this.value)">
+            <input type="number" class="p-input p-price" value="${p.cijena || p.price}" onchange="updateProduct(${idx}, 'price', this.value)">
+        `;
+        list.appendChild(div);
     });
+}
+
+function updateProduct(idx, field, val) {
+    const item = state.selectedInquiry;
+    let raw = JSON.parse(item.jsonData);
+    if (!raw.stavke) raw.stavke = [];
+
+    if (field === 'qty') raw.stavke[idx].kolicina = parseFloat(val);
+    if (field === 'price') raw.stavke[idx].cijena = parseFloat(val);
+
+    // Recalculate total
+    let total = raw.stavke.reduce((sum, p) => sum + (p.kolicina * p.cijena), 0);
+    item.amount = total;
+    item.jsonData = JSON.stringify(raw);
+
+    document.getElementById('detAmount').innerText = formatCurrency(total);
+    document.getElementById('btnSaveChanges').style.display = "block";
+}
+
+async function saveInquiryChanges() {
+    const item = state.selectedInquiry;
+    showLoader("Spremanje...");
+    try {
+        const res = await fetch(GAS_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: "updateInquiry",
+                id: item.id,
+                amount: item.amount,
+                jsonData: JSON.parse(item.jsonData)
+            })
+        });
+        const result = await res.json();
+        if (result.status === "success") {
+            alert("Izmjene spremljene!");
+            document.getElementById('btnSaveChanges').style.display = "none";
+            refreshData();
+        }
+    } catch (e) { alert("Greška pri spremanju!"); } finally { hideLoader(); }
 }
 
 // --- MODALS ---
 function initModal() {
-    const inquiryModal = document.getElementById('inquiryModal');
-    const previewModal = document.getElementById('previewModal');
-
-    document.querySelectorAll('.close-modal').forEach(btn => {
-        btn.onclick = () => { inquiryModal.classList.remove('active'); previewModal.classList.remove('active'); };
-    });
+    const m = document.getElementById('inquiryModal');
+    document.querySelectorAll('.close-modal').forEach(b => b.onclick = () => m.classList.remove('active'));
+    document.getElementById('btnCloseInquiry').onclick = () => m.classList.remove('active');
+    document.getElementById('btnSaveChanges').onclick = saveInquiryChanges;
 
     document.getElementById('btnSendOffer').onclick = () => runGasAction('sendOffer');
     document.getElementById('btnSendInvoice').onclick = () => runGasAction('sendInvoice');
 }
 
-function handleInquiryAction(id) {
-    console.log("🔍 Otvaram akciju za ID:", id);
-    const item = state.inquiries.find(i => String(i.id) === String(id));
-    if (!item) {
-        console.error("❌ Upit nije pronađen u state-u:", id);
-        return;
-    }
-    state.selectedInquiryId = id;
-    document.getElementById('detName').innerText = item.name || "-";
-    document.getElementById('detEmail').innerText = item.email || "-";
-    document.getElementById('detSubject').innerText = item.subject || "-";
-    document.getElementById('detAmount').innerText = (item.amount || 0) + " €";
-    document.getElementById('inquiryModal').classList.add('active');
-}
-
 async function runGasAction(action) {
-    const id = state.selectedInquiryId;
-    if (!id) return;
+    const id = state.selectedInquiry.id;
     showLoader("Slanje...");
     try {
-        // GAS POST preporuka: text/plain da izbjegnemo preflight, ili mode no-cors
-        const res = await fetch(GAS_URL, {
-            method: 'POST',
-            body: JSON.stringify({ action, id })
-        });
-        alert("Akcija pokrenuta! Provjeri status u tablici.");
-        document.getElementById('inquiryModal').classList.remove('active');
-    } catch (err) {
-        console.error("GAS Error:", err);
-        alert("Pokušano slanje... Provjeri tablicu (možda je proknjiženo unatoč poruci).");
-    } finally { hideLoader(); }
+        await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action, id }) });
+        alert("Akcija uspješna!");
+    } catch (e) { alert("Greška!"); } finally { hideLoader(); }
 }
 
 // --- HELPERS ---
-function formatCurrency(val) { return new Intl.NumberFormat('hr-HR', { style: 'currency', currency: 'EUR' }).format(val); }
-function toBase64(file) { return new Promise((r, j) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = () => r(reader.result); reader.onerror = e => j(e); }); }
-function showLoader(m) {
-    const el = document.getElementById('loader');
-    if (el) { el.innerText = m; el.style.display = "block"; }
-}
-function hideLoader() {
-    const el = document.getElementById('loader');
-    if (el) el.style.display = "none";
-}
+function formatCurrency(v) { return new Intl.NumberFormat('hr-HR', { style: 'currency', currency: 'EUR' }).format(v || 0); }
+function showLoader(m) { const l = document.getElementById('loader'); if (l) { l.innerText = m; l.style.display = "block"; } }
+function hideLoader() { const l = document.getElementById('loader'); if (l) l.style.display = "none"; }
+function initScanner() { /* matches v2.4+ */ }
+function toBase64(f) { return new Promise((r, j) => { const rd = new FileReader(); rd.readAsDataURL(f); rd.onload = () => r(rd.result); }); }
