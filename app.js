@@ -2,7 +2,7 @@
  * 2LMF PRO BUSINESS - FRONTEND CORE 🦈🚀
  */
 
-const GAS_URL = "https://script.google.com/macros/s/AKfycbyFj_mX8E8Uj8R6_jE8_jE8_jE8_jE8_jE8_jE8/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbx4TQ6cFNr8X-fNRHE0Ai571pAioDeny_mSSrTVQm3OHbTKOhfIEDiKDFM2shZ5zDFLrA/exec";
 
 let state = {
     inquiries: [],
