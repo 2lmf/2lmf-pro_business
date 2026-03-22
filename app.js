@@ -1,6 +1,6 @@
 /**
  * 2LMF PRO BUSINESS - FRONTEND CORE 🦈🚀
- * Verzija: 2.5 (Real Revenue + Editable Products)
+ * Verzija: 2.6 (STABLE UI - Pill Style + No Duplicates)
  */
 
 const GAS_URL = "https://script.google.com/macros/s/AKfycbx4TQ6cFNr8X-fNRHE0Ai571pAioDeny_mSSrTVQm3OHbTKOhfIEDiKDFM2shZ5zDFLrA/exec";
@@ -29,9 +29,8 @@ function initNavigation() {
         });
     });
 
-    document.getElementById('inquirySearch').addEventListener('input', (e) => {
-        filterInquiries(e.target.value);
-    });
+    const search = document.getElementById('inquirySearch');
+    if (search) search.addEventListener('input', (e) => filterInquiries(e.target.value));
 }
 
 function switchTab(tabId) {
@@ -39,7 +38,7 @@ function switchTab(tabId) {
     document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
     document.getElementById(`tab-${tabId}`).classList.add('active');
-    if (tabId === 'dashboard') setTimeout(updateCharts, 200);
+    if (tabId === 'dashboard') setTimeout(updateCharts, 300);
 }
 
 // --- DATA SYNC ---
@@ -53,9 +52,9 @@ async function refreshData() {
             state.stats = result.stats || state.stats;
             renderDashboard();
             renderInquiries();
-            setTimeout(updateCharts, 300);
+            setTimeout(updateCharts, 400);
         }
-    } catch (err) { console.error("Error:", err); } finally { hideLoader(); }
+    } catch (err) { console.error("Data Fetch Error:", err); } finally { hideLoader(); }
 }
 
 // --- RENDERERS ---
@@ -69,6 +68,7 @@ function renderDashboard() {
     const list = document.getElementById('activityList');
     list.innerHTML = '';
     (stats.recentActivities || []).forEach(item => {
+        if (!item.iznos || item.iznos === 0) return;
         const div = document.createElement('div');
         div.className = 'inquiry-item';
         const color = item.vrsta === "IRA" ? "var(--success)" : "var(--accent-cyan)";
@@ -85,37 +85,43 @@ function renderDashboard() {
 
 function updateCharts() {
     const stats = state.stats;
-    if (!stats.yearlyStats) return;
+    if (!stats.yearlyStats || stats.yearlyStats.length === 0) return;
 
     // Yearly
-    const yCtx = document.getElementById('yearlyChart').getContext('2d');
-    if (state.charts.yearly) state.charts.yearly.destroy();
-    state.charts.yearly = new Chart(yCtx, {
-        type: 'bar',
-        data: {
-            labels: ['S', 'V', 'O', 'T', 'S', 'L', 'S', 'K', 'R', 'L', 'S', 'P'],
-            datasets: [
-                { label: 'Naplaćeno', data: stats.yearlyStats.map(m => m.revenue), backgroundColor: 'rgba(46, 204, 113, 0.8)', borderRadius: 5 },
-                { label: 'Isplaćeno', data: stats.yearlyStats.map(m => m.expenses), backgroundColor: 'rgba(0, 242, 255, 0.8)', borderRadius: 5 }
-            ]
-        },
-        options: chartOptions
-    });
+    const yEl = document.getElementById('yearlyChart');
+    if (yEl) {
+        const yCtx = yEl.getContext('2d');
+        if (state.charts.yearly) state.charts.yearly.destroy();
+        state.charts.yearly = new Chart(yCtx, {
+            type: 'bar',
+            data: {
+                labels: ['S', 'V', 'O', 'T', 'S', 'L', 'S', 'K', 'R', 'L', 'S', 'P'],
+                datasets: [
+                    { label: 'Naplaćeno', data: stats.yearlyStats.map(m => m.revenue), backgroundColor: 'rgba(46, 204, 113, 0.9)', borderRadius: 5 },
+                    { label: 'Isplaćeno', data: stats.yearlyStats.map(m => m.expenses), backgroundColor: 'rgba(0, 242, 255, 0.9)', borderRadius: 5 }
+                ]
+            },
+            options: chartOptions
+        });
+    }
 
     // Monthly
-    const mCtx = document.getElementById('monthlyChart').getContext('2d');
-    if (state.charts.monthly) state.charts.monthly.destroy();
-    state.charts.monthly = new Chart(mCtx, {
-        type: 'bar',
-        data: {
-            labels: stats.monthlyStats.map(d => d.day),
-            datasets: [
-                { label: 'Prihodi', data: stats.monthlyStats.map(d => d.revenue), backgroundColor: 'rgba(46, 204, 113, 0.7)' },
-                { label: 'Troškovi', data: stats.monthlyStats.map(d => d.expenses), backgroundColor: 'rgba(0, 242, 255, 0.7)' }
-            ]
-        },
-        options: chartOptions
-    });
+    const mEl = document.getElementById('monthlyChart');
+    if (mEl) {
+        const mCtx = mEl.getContext('2d');
+        if (state.charts.monthly) state.charts.monthly.destroy();
+        state.charts.monthly = new Chart(mCtx, {
+            type: 'bar',
+            data: {
+                labels: stats.monthlyStats.map(d => d.day),
+                datasets: [
+                    { label: 'Prihodi', data: stats.monthlyStats.map(d => d.revenue), backgroundColor: 'rgba(46, 204, 113, 0.7)' },
+                    { label: 'Troškovi', data: stats.monthlyStats.map(d => d.expenses), backgroundColor: 'rgba(0, 242, 255, 0.7)' }
+                ]
+            },
+            options: chartOptions
+        });
+    }
 }
 
 const chartOptions = {
@@ -129,20 +135,24 @@ const chartOptions = {
 
 function renderInquiries(data = state.inquiries) {
     const list = document.getElementById('inquiryList');
+    if (!list) return;
     list.innerHTML = '';
     data.forEach(item => {
         const div = document.createElement('div');
         div.className = 'inquiry-item shadow-premium';
-        div.style.marginBottom = "12px";
+        div.style.marginBottom = "15px";
+        div.style.cursor = "pointer";
+        div.onclick = () => handleInquiryAction(item.id);
+
         div.innerHTML = `
-            <div class="item-main" onclick="handleInquiryAction('${item.id}')">
-                <span class="item-title">${item.name}</span>
-                <span class="item-meta">${item.id} • ${item.subject}</span>
+            <div class="item-main">
+                <span class="item-title">${item.name || "Bez imena"}</span>
+                <span class="item-meta">${item.id} • ${item.subject || "Upit"}</span>
                 <span class="item-meta">Status: <b style="color:var(--accent-orange)">${item.status}</b></span>
             </div>
             <div class="item-action" style="flex-direction:column; align-items:flex-end;">
-                <b style="font-size:1.1rem;">${formatCurrency(item.amount)}</b>
-                <button class="btn-text" style="color:var(--accent-cyan); margin-top:5px; font-weight:bold; font-size:0.75rem;">DETALJI / UREDI</button>
+                <b style="font-size:1.15rem; color:#fff;">${formatCurrency(item.amount)}</b>
+                <button class="btn-pill-small" style="margin-top:10px;">DETALJI</button>
             </div>
         `;
         list.appendChild(div);
@@ -152,27 +162,29 @@ function renderInquiries(data = state.inquiries) {
 function filterInquiries(query) {
     const q = query.toLowerCase();
     const filtered = state.inquiries.filter(i =>
-        i.name.toLowerCase().includes(q) || i.id.toLowerCase().includes(q) || i.subject.toLowerCase().includes(q)
+        (i.name || "").toLowerCase().includes(q) ||
+        (i.id || "").toLowerCase().includes(q) ||
+        (i.subject || "").toLowerCase().includes(q)
     );
     renderInquiries(filtered);
 }
 
 // --- EDITABLE MODAL LOGIC ---
 function handleInquiryAction(id) {
+    console.log("🔍 Opening Details for:", id);
     const item = state.inquiries.find(i => String(i.id) === String(id));
     if (!item) return;
     state.selectedInquiry = item;
 
-    document.getElementById('detName').innerText = item.name;
-    document.getElementById('detEmail').innerText = item.email;
+    document.getElementById('detName').innerText = item.name || "-";
+    document.getElementById('detEmail').innerText = item.email || "-";
     document.getElementById('detAmount').innerText = formatCurrency(item.amount);
 
-    // Parse JSON
     let products = [];
     try {
-        const raw = JSON.parse(item.jsonData);
+        const raw = JSON.parse(item.jsonData || "{}");
         products = raw.stavke || [];
-    } catch (e) { console.error("JSON Error"); }
+    } catch (e) { console.error("JSON Error in Inquiry", id); }
 
     renderProductList(products);
     document.getElementById('btnSaveChanges').style.display = "none";
@@ -183,7 +195,7 @@ function renderProductList(products) {
     const list = document.getElementById('productList');
     list.innerHTML = '';
     if (products.length === 0) {
-        list.innerHTML = '<div class="item-meta">Nema definiranih stavki.</div>';
+        list.innerHTML = '<div class="item-meta">Nema definiranih stavki proizvoda.</div>';
         return;
     }
 
@@ -191,9 +203,9 @@ function renderProductList(products) {
         const div = document.createElement('div');
         div.className = 'p-item';
         div.innerHTML = `
-            <div class="p-name">${p.naziv || p.name}</div>
-            <input type="number" class="p-input p-qty" value="${p.kolicina || p.qty}" onchange="updateProduct(${idx}, 'qty', this.value)">
-            <input type="number" class="p-input p-price" value="${p.cijena || p.price}" onchange="updateProduct(${idx}, 'price', this.value)">
+            <div class="p-name">${p.naziv || p.name || "Stavka"}</div>
+            <input type="number" class="p-input p-qty" value="${p.kolicina || p.qty || 0}" onchange="updateProduct(${idx}, 'qty', this.value)">
+            <input type="number" class="p-input p-price" value="${p.cijena || p.price || 0}" onchange="updateProduct(${idx}, 'price', this.value)">
         `;
         list.appendChild(div);
     });
@@ -201,14 +213,13 @@ function renderProductList(products) {
 
 function updateProduct(idx, field, val) {
     const item = state.selectedInquiry;
-    let raw = JSON.parse(item.jsonData);
+    let raw = JSON.parse(item.jsonData || '{"stavke":[]}');
     if (!raw.stavke) raw.stavke = [];
 
-    if (field === 'qty') raw.stavke[idx].kolicina = parseFloat(val);
-    if (field === 'price') raw.stavke[idx].cijena = parseFloat(val);
+    if (field === 'qty') raw.stavke[idx].kolicina = parseFloat(val) || 0;
+    if (field === 'price') raw.stavke[idx].cijena = parseFloat(val) || 0;
 
-    // Recalculate total
-    let total = raw.stavke.reduce((sum, p) => sum + (p.kolicina * p.cijena), 0);
+    let total = raw.stavke.reduce((sum, p) => sum + ((p.kolicina || 0) * (p.cijena || 0)), 0);
     item.amount = total;
     item.jsonData = JSON.stringify(raw);
 
@@ -220,29 +231,28 @@ async function saveInquiryChanges() {
     const item = state.selectedInquiry;
     showLoader("Spremanje...");
     try {
-        const res = await fetch(GAS_URL, {
-            method: 'POST',
-            body: JSON.stringify({
-                action: "updateInquiry",
-                id: item.id,
-                amount: item.amount,
-                jsonData: JSON.parse(item.jsonData)
-            })
-        });
+        const body = {
+            action: "updateInquiry",
+            id: item.id,
+            amount: item.amount,
+            jsonData: JSON.parse(item.jsonData)
+        };
+        const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(body) });
         const result = await res.json();
         if (result.status === "success") {
-            alert("Izmjene spremljene!");
+            alert("Izmjene su uspješno spremljene u tablicu!");
             document.getElementById('btnSaveChanges').style.display = "none";
             refreshData();
         }
-    } catch (e) { alert("Greška pri spremanju!"); } finally { hideLoader(); }
+    } catch (e) { alert("Greška pri komunikaciji s tablicom."); } finally { hideLoader(); }
 }
 
 // --- MODALS ---
 function initModal() {
-    const m = document.getElementById('inquiryModal');
-    document.querySelectorAll('.close-modal').forEach(b => b.onclick = () => m.classList.remove('active'));
-    document.getElementById('btnCloseInquiry').onclick = () => m.classList.remove('active');
+    const modal = document.getElementById('inquiryModal');
+    if (!modal) return;
+    document.querySelectorAll('.close-modal').forEach(b => b.onclick = () => modal.classList.remove('active'));
+    document.getElementById('btnCloseInquiry').onclick = () => modal.classList.remove('active');
     document.getElementById('btnSaveChanges').onclick = saveInquiryChanges;
 
     document.getElementById('btnSendOffer').onclick = () => runGasAction('sendOffer');
@@ -254,13 +264,13 @@ async function runGasAction(action) {
     showLoader("Slanje...");
     try {
         await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action, id }) });
-        alert("Akcija uspješna!");
-    } catch (e) { alert("Greška!"); } finally { hideLoader(); }
+        alert("Akcija pokrenuta! Provjeri status u tablici.");
+    } catch (e) { alert("Greška pri slanju."); } finally { hideLoader(); }
 }
 
 // --- HELPERS ---
 function formatCurrency(v) { return new Intl.NumberFormat('hr-HR', { style: 'currency', currency: 'EUR' }).format(v || 0); }
 function showLoader(m) { const l = document.getElementById('loader'); if (l) { l.innerText = m; l.style.display = "block"; } }
 function hideLoader() { const l = document.getElementById('loader'); if (l) l.style.display = "none"; }
-function initScanner() { /* matches v2.4+ */ }
+function initScanner() { /* Ready for v2.6 */ }
 function toBase64(f) { return new Promise((r, j) => { const rd = new FileReader(); rd.readAsDataURL(f); rd.onload = () => r(rd.result); }); }
