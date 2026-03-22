@@ -23,6 +23,9 @@
     <!-- Icons (FontAwesome) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+    <!-- Charts Support -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <!-- Styles -->
     <link rel="stylesheet" href="style.css">
 </head>
@@ -69,6 +72,18 @@
                     </div>
                 </div>
 
+                <!-- Charts Section -->
+                <div class="charts-container">
+                    <div class="chart-card glass-card">
+                        <span class="card-label">GODIŠNJA ANALITIKA (MJESECI)</span>
+                        <canvas id="yearlyChart"></canvas>
+                    </div>
+                    <div class="chart-card glass-card">
+                        <span class="card-label">TEKUĆI MJESEC (DANI)</span>
+                        <canvas id="monthlyChart"></canvas>
+                    </div>
+                </div>
+
                 <div class="section-header">
                     <h3>ZADNJE AKTIVNOSTI</h3>
                     <button class="text-btn">VIDI SVE</button>
@@ -82,9 +97,14 @@
 
             <!-- TAB: Inquiries -->
             <section id="tab-inquiries" class="tab-content">
-                <div class="search-bar">
-                    <i class="fas fa-search"></i>
-                    <input type="text" id="inquirySearch" placeholder="Pretraži upite (Ime ili ID)...">
+                <div class="action-header" style="margin-bottom: 20px;">
+                    <button class="btn-primary" style="width: 100%; justify-content: center; margin-bottom: 15px;">
+                        <i class="fas fa-plus-circle"></i> NOVI UPIT / PONUDA
+                    </button>
+                    <div class="search-bar" style="margin-bottom: 0;">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="inquirySearch" placeholder="Pretraži upite (Ime ili ID)...">
+                    </div>
                 </div>
                 <div id="inquiryList" class="list-container">
                     <!-- Inquiries will be rendered here -->
