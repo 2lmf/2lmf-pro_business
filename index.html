@@ -48,14 +48,24 @@
             <section id="tab-dashboard" class="tab-content active">
                 <div class="dashboard-grid">
                     <div class="stat-card glass-card">
-                        <span class="card-label">MJESEČNI PRIHODI</span>
+                        <span class="card-label">PRIHODI (IRA)</span>
                         <h2 id="monthlyRevenue">0.00 €</h2>
-                        <div class="trend up">+12.5%</div>
+                        <div class="trend up" id="revenueTrend">Ovaj mjesec</div>
                     </div>
                     <div class="stat-card glass-card">
-                        <span class="card-label">OTVORENI UPITI</span>
+                        <span class="card-label">TROŠKOVI (URA)</span>
+                        <h2 id="monthlyExpenses" style="color: var(--accent-cyan)">0.00 €</h2>
+                        <div class="trend" id="expenseTrend" style="color: var(--text-secondary)">Ovaj mjesec</div>
+                    </div>
+                    <div class="stat-card glass-card">
+                        <span class="card-label">UPITI</span>
                         <h2 id="openInquiries">0</h2>
-                        <div class="status-indicator">Shark Sync</div>
+                        <div class="status-indicator">Novo</div>
+                    </div>
+                    <div class="stat-card glass-card">
+                        <span class="card-label">DOBIT (NETO)</span>
+                        <h2 id="estimatedProfit">0.00 €</h2>
+                        <div class="trend" id="profitTrend">Procjena</div>
                     </div>
                 </div>
 

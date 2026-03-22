@@ -75,23 +75,27 @@ async function refreshData() {
 
 // --- RENDERERS ---
 function renderDashboard() {
-    document.getElementById('monthlyRevenue').innerText = formatCurrency(state.stats.revenue);
-    document.getElementById('openInquiries').innerText = state.stats.inquiriesCount;
+    const stats = state.stats;
+    document.getElementById('monthlyRevenue').innerText = formatCurrency(stats.revenue);
+    document.getElementById('monthlyExpenses').innerText = formatCurrency(stats.expenses);
+    document.getElementById('openInquiries').innerText = stats.inquiriesCount;
+    document.getElementById('estimatedProfit').innerText = formatCurrency(stats.revenue - stats.expenses);
 
     const list = document.getElementById('activityList');
     list.innerHTML = '';
 
-    const activities = state.inquiries.slice(0, 5); // Show latest 5
+    const activities = stats.recentActivities || [];
     activities.forEach(item => {
         const div = document.createElement('div');
-        div.className = 'inquiry-item';
+        div.className = 'inquiry-item'; // Reusing style
+        const colorClass = item.vrsta === "IRA" ? "var(--success)" : "var(--accent-cyan)";
         div.innerHTML = `
             <div class="item-main">
-                <span class="item-title">${item.name}</span>
-                <span class="item-meta">${item.id} • ${item.subject}</span>
+                <span class="item-title" style="color: ${colorClass}">${item.vrsta}: ${item.stranka}</span>
+                <span class="item-meta">${item.datum} • ${item.opis}</span>
             </div>
             <div class="item-action">
-                <i class="fas fa-chevron-right"></i>
+                <b>${formatCurrency(item.iznos)}</b>
             </div>
         `;
         list.appendChild(div);
