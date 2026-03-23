@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="hr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHARPSHARK | Shark Business CRM</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Outfit:wght@300;400;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --accent-orange: #E67E22;
+            --accent-cyan: #00F2FF;
+            --bg-dark: #020205;
+            --card-bg: rgba(15, 15, 20, 0.7);
+            --glass: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.05);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: #8a8a8a;
+            font-family: 'Outfit', sans-serif;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* --- NAVIGATION (FROM 2LMF WEB 2.0) --- */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 20px 60px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(2, 2, 5, 0.95);
+            backdrop-filter: blur(30px);
+            z-index: 2000;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .lmf-brand {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 900;
+            color: #eee;
+            font-size: 1.25rem;
+            letter-spacing: 3px;
+            text-decoration: none;
+        }
+
+        .lmf-brand span {
+            color: var(--accent-orange);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+        }
+
+        .nav-links a {
+            color: var(--accent-orange);
+            text-decoration: none;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.8rem;
+            letter-spacing: 2px;
+            transition: all 0.3s;
+            text-transform: uppercase;
+        }
+
+        .nav-links a:hover {
+            color: #fff;
+        }
+
+        /* --- HERO --- */
+        .shark-hero {
+            min-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)), url('https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=1200');
+            background-size: cover;
+            background-position: center;
+            padding-top: 100px;
+        }
+
+        .shark-hero h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(2.5rem, 5vw, 4.5rem);
+            font-weight: 900;
+            color: #fff;
+            margin-bottom: 20px;
+        }
+
+        .shark-hero h1 span.orange {
+            color: var(--accent-orange);
+        }
+
+        .shark-hero h1 span.cyan {
+            color: var(--accent-cyan);
+        }
+
+        .shark-hero p {
+            font-size: 1.2rem;
+            max-width: 800px;
+            margin-bottom: 40px;
+            color: #aaa;
+        }
+
+        /* --- PRICING --- */
+        .pricing-section {
+            padding: 100px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+            margin-top: 50px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            padding: 50px 40px;
+            border-radius: 20px;
+            position: relative;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            backdrop-filter: blur(10px);
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            border-color: var(--accent-cyan);
+            box-shadow: 0 20px 40px rgba(0, 242, 255, 0.1);
+        }
+
+        .card.featured {
+            border: 1px solid var(--accent-orange);
+            background: rgba(230, 126, 34, 0.05);
+        }
+
+        .badge {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            background: var(--accent-orange);
+            color: #000;
+            font-size: 0.7rem;
+            font-weight: 900;
+            font-family: 'Orbitron';
+            padding: 5px 15px;
+            border-radius: 4px;
+        }
+
+        .card h2 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.4rem;
+            color: #fff;
+            margin-bottom: 15px;
+            letter-spacing: 2px;
+        }
+
+        .price {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.8rem;
+            font-weight: 900;
+            color: #fff;
+            margin-bottom: 30px;
+        }
+
+        .price small {
+            font-size: 0.9rem;
+            color: var(--accent-orange);
+            letter-spacing: 1px;
+        }
+
+        .features {
+            list-style: none;
+            margin-bottom: 40px;
+        }
+
+        .features li {
+            margin-bottom: 15px;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            color: #bbb;
+        }
+
+        .features li i {
+            color: var(--accent-cyan);
+            margin-top: 5px;
+        }
+
+        .features li.disabled {
+            opacity: 0.3;
+            text-decoration: line-through;
+        }
+
+        .btn {
+            display: block;
+            text-align: center;
+            background: transparent;
+            color: var(--accent-orange);
+            text-decoration: none;
+            padding: 18px;
+            border-radius: 4px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            border: 2px solid var(--accent-orange);
+            transition: all 0.3s;
+            letter-spacing: 2px;
+            font-size: 0.8rem;
+        }
+
+        .card.featured .btn {
+            background: var(--accent-orange);
+            color: #000;
+        }
+
+        .btn:hover {
+            background: var(--accent-cyan);
+            border-color: var(--accent-cyan);
+            color: #000;
+            box-shadow: 0 0 30px rgba(0, 242, 255, 0.4);
+        }
+
+        /* --- CONTENT --- */
+        .content-blog {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 100px 20px;
+        }
+
+        .content-blog h3 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.2rem;
+            color: #fff;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        .content-blog p {
+            font-size: 1.15rem;
+            margin-bottom: 25px;
+            line-height: 1.8;
+            color: #aaa;
+        }
+
+        /* --- FOOTER & HASHTAGS --- */
+        .seo-footer {
+            background: #020205;
+            padding: 80px 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.03);
+            text-align: center;
+        }
+
+        .hashtags {
+            font-size: 0.65rem;
+            font-style: italic;
+            opacity: 0.3;
+            line-height: 1.8;
+            color: #aaa;
+            letter-spacing: 1px;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 40px;
+        }
+
+        .copyright-bar {
+            background: #000;
+            color: #fff;
+            text-align: center;
+            padding: 40px 0;
+            font-weight: 900;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.75rem;
+            letter-spacing: 3px;
+        }
+
+        .copyright-bar span {
+            color: var(--accent-orange);
+        }
+
+        @media (max-width: 768px) {
+            nav {
+                padding: 20px;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .shark-hero h1 {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- NAVIGATION -->
+    <nav>
+        <a href="#" class="lmf-brand">2LMF <span>PRO</span></a>
+        <div class="nav-links">
+            <a href="#">Početna</a>
+            <a href="#">Arhitektura</a>
+            <a href="#">Katalog</a>
+            <a href="#">Znanje</a>
+            <a href="#">Kontakt</a>
+        </div>
+    </nav>
+
+    <!-- HERO SECTION -->
+    <section class="shark-hero">
+        <h1>Minimax u <span class="orange">svakom džepu</span></h1>
+        <p>Profesionalna izrada ponuda i CRM sustav za terenski rad. Bez mjesečne pretplate, bez skrivenih troškova i
+            bez brige oko podataka.</p>
+    </section>
+
+    <!-- PRICING SECTION -->
+    <section class="pricing-section">
+        <div class="pricing-grid">
+            <!-- DIY -->
+            <div class="card">
+                <h2>SHARK START</h2>
+                <div class="price">99 €<small> JEDNOKRATNO</small></div>
+                <ul class="features">
+                    <li><i class="fas fa-check"></i> Google Sheet Master predložak</li>
+                    <li><i class="fas fa-check"></i> Apps Script Backend kôd</li>
+                    <li><i class="fas fa-check"></i> Univerzalni PWA pristup</li>
+                    <li><i class="fas fa-check"></i> Video upute za postavljanje</li>
+                    <li><i class="fas fa-check"></i> Tablica upita spremna za knjigovođu</li>
+                    <li class="disabled"><i class="fas fa-times"></i> Foto dokumentacija s terena</li>
+                    <li class="disabled"><i class="fas fa-times"></i> Tehnička podrška</li>
+                </ul>
+                <a href="#" class="btn">ODABERI START</a>
+            </div>
+
+            <!-- PRO -->
+            <div class="card featured">
+                <div class="badge">NAJPRODAVANIJE</div>
+                <h2>SHARK PRO</h2>
+                <div class="price">249 €<small> JEDNOKRATNO</small></div>
+                <ul class="features">
+                    <li><i class="fas fa-check"></i> Sve iz START paketa</li>
+                    <li><i class="fas fa-check"></i> **Ključ u ruke** tehnički setup</li>
+                    <li><i class="fas fa-check"></i> Personalizacija logotipa i boja</li>
+                    <li><i class="fas fa-check"></i> Uvoz vašeg kataloga artikala</li>
+                    <li><i class="fas fa-check"></i> **Foto arhiva terena** (linkovi u ponudi)</li>
+                    <li><i class="fas fa-check"></i> 60 dana direktne podrške</li>
+                </ul>
+                <a href="#" class="btn">ODABERI PRO</a>
+            </div>
+
+            <!-- PARTNER -->
+            <div class="card">
+                <h2>SHARK PARTNER</h2>
+                <div class="price">15 €<small> MJESEČNO</small></div>
+                <ul class="features">
+                    <li><i class="fas fa-check"></i> Sve iz PRO paketa</li>
+                    <li><i class="fas fa-check"></i> **Automatizacija za knjigovođu** (1 klik export)</li>
+                    <li><i class="fas fa-check"></i> Integrirani foto modul (Upload na Drive)</li>
+                    <li><i class="fas fa-check"></i> Prioritetna WhatsApp podrška</li>
+                    <li><i class="fas fa-check"></i> Hosting na vašoj domeni</li>
+                    <li><i class="fas fa-check"></i> Redoviti backup i optimizacija baze</li>
+                </ul>
+                <a href="#" class="btn">POSTANI PARTNER</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- BLOG CONTENT -->
+    <section class="content-blog">
+        <h3>Zašto odabrati Shark Business?</h3>
+        <p>Vrijeme je najvrijedniji resurs svakog poduzetnika, a terenski rad nosi svoje izazove. Koliko ste samo puta
+            bili u gužvi, na gradilištu ili kod klijenta, a željeli ste mu odmah poslati kristalno jasnu ponudu? Ručno
+            pisanje ponuda u kasnim večernjim satima nakon dugog dana na terenu polako postaje prošlost.</p>
+        <p>Shark Business vam omogućuje da izradite profesionalnu ponudu s generiranim QR kodom za plaćanje u manje od
+            minute. Vaši klijenti skeniraju kod i vrše uplatu odmah putem mobilnog bankarstva — bez grešaka u
+            prepisivanju IBAN-a, modela plaćanja ili iznosa.</p>
+        <p>Naš sustav koristi snagu Google Sheets ekosustava. To znači da ste vi jedini i isključivi vlasnik svojih
+            podataka. Nema skrivenih baza, nema ovisnosti o skupim infrastrukturama. Samo vi, vaš pametni telefon i vaše
+            poslovanje spremno za novu digitalnu eru.</p>
+    </section>
+
+    <!-- FOOTER WITH HASHTAGS FROM LAST ARTICLE -->
+    <div class="seo-footer">
+        <p class="hashtags">
+            #ventiliranefasade #fasada #hpl #vlaknocement #aluminij #podkonstrukcija #termo #termoizolacija
+            #najpovoljnije #beznaknade #freehosting #freehostingzauvijek #vrhunskakvaliteta #webshop #freewebshop
+            #sharpshark #sharpsharkdigital #besplatno #besplatniwebshop #3dpanel #2dpanel #panelograda #konfigurator
+            #fiskalizacija #rezervacijasmještaja #channelmanager #webdesign #SEO #konfiguratorograda
+            #najpovoljnijacijena #top #hidro #hidroizolacija #XPS #stirodur #TPO #PVC #bitumen #bitumenskaljepenka
+            #ljepenka #arhitektura #kalkulator #kalkulatorograda #kalkulatorfasada #građevinskikalkulator #projektiranje
+            #poliuretanPU #aluminijskaizolacija #zvučnaizolacija #osb #EPS #stiropor #bentonit #polimercement #vuna
+            #kamenavuna #konfiguratorograda #blog #manjenaknade #vasezauvijek
+        </p>
+    </div>
+
+    <div class="copyright-bar">
+        &copy; 2026. 2LMF <span>PRO</span> j.d.o.o. ZAGREB, HRVATSKA
+    </div>
+
+</body>
+
+</html>
