@@ -1,6 +1,6 @@
 /**
  * 2LMF PRO BUSINESS - FRONTEND CORE 🦈🚀
- * Verzija: 2.9.2 (CRITICAL FIX - BUTTONS & SYNC)
+ * Verzija: 2.9.3 (CENTERED SCANNER + 1000 ROW SCAN)
  */
 
 const GAS_URL = "https://script.google.com/macros/s/AKfycbx4TQ6cFNr8X-fNRHE0Ai571pAioDeny_mSSrTVQm3OHbTKOhfIEDiKDFM2shZ5zDFLrA/exec";
@@ -59,10 +59,7 @@ function switchTab(tabId) {
 
 // --- DATA SYNC ---
 async function refreshData() {
-    showLoader("Učitavanje v2.9.2...");
-    const loader = document.getElementById('loader');
-    if (loader) loader.style.display = "block";
-
+    showLoader("Učitavanje v2.9.3...");
     try {
         const response = await fetch(`${GAS_URL}?action=get_dashboard_data&cb=${Date.now()}`);
         const result = await response.json();
@@ -72,30 +69,16 @@ async function refreshData() {
             renderDashboard();
             renderInquiries();
             setTimeout(updateCharts, 600);
-        } else {
-            console.error("API Error", result);
         }
-    } catch (err) {
-        console.error("Fetch Error:", err);
-    } finally {
-        if (loader) loader.style.display = "none";
-    }
+    } catch (err) { console.error("Fetch Error:", err); } finally { hideLoader(); }
 }
 
-// --- RENDERERS ---
 function renderDashboard() {
     const stats = state.stats;
-    const mr = document.getElementById('monthlyRevenue');
-    if (mr) mr.innerText = formatCurrency(stats.revenue);
-
-    const me = document.getElementById('monthlyExpenses');
-    if (me) me.innerText = formatCurrency(stats.expenses);
-
-    const yrDisp = document.getElementById('yearlyRevenueDisplay');
-    if (yrDisp) yrDisp.innerText = formatCurrency(stats.yearlyRevenue);
-
-    const yeDisp = document.getElementById('yearlyExpensesDisplay');
-    if (yeDisp) yeDisp.innerText = formatCurrency(stats.yearlyExpenses);
+    const mr = document.getElementById('monthlyRevenue'); if (mr) mr.innerText = formatCurrency(stats.revenue);
+    const me = document.getElementById('monthlyExpenses'); if (me) me.innerText = formatCurrency(stats.expenses);
+    const yrDisp = document.getElementById('yearlyRevenueDisplay'); if (yrDisp) yrDisp.innerText = formatCurrency(stats.yearlyRevenue);
+    const yeDisp = document.getElementById('yearlyExpensesDisplay'); if (yeDisp) yeDisp.innerText = formatCurrency(stats.yearlyExpenses);
 
     const list = document.getElementById('activityList');
     if (!list) return;
@@ -150,10 +133,7 @@ function updateCharts() {
                     borderRadius: 10
                 }]
             },
-            options: {
-                ...chartOptions,
-                plugins: { legend: { display: false } }
-            }
+            options: { ...chartOptions, plugins: { legend: { display: false } } }
         });
     }
 }
@@ -177,7 +157,6 @@ function renderInquiries(data = state.inquiries) {
         div.onclick = () => handleInquiryAction(item.id);
         div.style.cursor = "pointer";
         div.style.marginBottom = "15px";
-
         div.innerHTML = `
             <div class="item-main">
                 <span class="item-title">${item.name || "Bez imena"}</span>
@@ -206,18 +185,15 @@ function handleInquiryAction(id) {
     const item = state.inquiries.find(i => String(i.id) === String(id));
     if (!item) return;
     state.selectedInquiry = item;
-
     const dn = document.getElementById('detName'); if (dn) dn.innerText = item.name || "-";
     const de = document.getElementById('detEmail'); if (de) de.innerText = item.email || "-";
     const da = document.getElementById('detAmount'); if (da) da.innerText = formatCurrency(item.amount);
-
     let products = [];
     try {
         const raw = JSON.parse(item.jsonData || "{}");
         products = raw.stavke || raw.items || raw.products || [];
         if (Array.isArray(raw) && raw.length > 0) products = raw;
     } catch (e) { console.error("JSON Error", id); }
-
     renderProductList(products);
     const saveBtn = document.getElementById('btnSaveChanges'); if (saveBtn) saveBtn.style.display = "none";
     const modal = document.getElementById('inquiryModal'); if (modal) modal.classList.add('active');
@@ -253,18 +229,11 @@ function updateProduct(idx, field, val) {
     const item = state.selectedInquiry;
     let raw = JSON.parse(item.jsonData || '{"stavke":[]}');
     if (!raw.stavke) raw.stavke = raw.items || raw.products || [];
-
-    if (field === 'qty') {
-        if (raw.stavke[idx]) raw.stavke[idx].kolicina = parseFloat(val) || 0;
-    }
-    if (field === 'price') {
-        if (raw.stavke[idx]) raw.stavke[idx].cijena = parseFloat(val) || 0;
-    }
-
+    if (field === 'qty') { if (raw.stavke[idx]) raw.stavke[idx].kolicina = parseFloat(val) || 0; }
+    if (field === 'price') { if (raw.stavke[idx]) raw.stavke[idx].cijena = parseFloat(val) || 0; }
     let total = raw.stavke.reduce((sum, p) => sum + ((p.kolicina || 0) * (p.cijena || 0)), 0);
     item.amount = total;
     item.jsonData = JSON.stringify({ stavke: raw.stavke });
-
     const da = document.getElementById('detAmount'); if (da) da.innerText = formatCurrency(total);
     const saveBtn = document.getElementById('btnSaveChanges'); if (saveBtn) saveBtn.style.display = "block";
 }
@@ -287,13 +256,10 @@ async function saveInquiryChanges() {
 }
 
 function initModal() {
-    const modal = document.getElementById('inquiryModal');
-    if (!modal) return;
+    const modal = document.getElementById('inquiryModal'); if (!modal) return;
     document.querySelectorAll('.close-modal').forEach(b => b.onclick = () => modal.classList.remove('active'));
-
     const closeBtn = document.getElementById('btnCloseInquiry'); if (closeBtn) closeBtn.onclick = () => modal.classList.remove('active');
     const saveBtn = document.getElementById('btnSaveChanges'); if (saveBtn) saveBtn.onclick = saveInquiryChanges;
-
     const offerBtn = document.getElementById('btnSendOffer'); if (offerBtn) offerBtn.onclick = () => runGasAction('sendOffer');
     const invBtn = document.getElementById('btnSendInvoice'); if (invBtn) invBtn.onclick = () => runGasAction('sendInvoice');
 }
@@ -308,6 +274,6 @@ async function runGasAction(action) {
 }
 
 function formatCurrency(v) { return new Intl.NumberFormat('hr-HR', { style: 'currency', currency: 'EUR' }).format(v || 0); }
-function showLoader(m) { const l = document.getElementById('loader'); if (l) { l.innerText = m; l.style.display = "block"; setTimeout(() => l.style.display = "none", 3000); } }
+function showLoader(m) { const l = document.getElementById('loader'); if (l) { l.innerText = m; l.style.display = "block"; } }
 function hideLoader() { const l = document.getElementById('loader'); if (l) l.style.display = "none"; }
 function initScanner() { }
