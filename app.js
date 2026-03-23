@@ -316,6 +316,11 @@ function initCatalog() {
 }
 
 async function openCatalog() {
+    const btn = document.getElementById('btnNewInquiry');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> UČITAVANJE KATALOGA...';
+    btn.disabled = true;
+
     showLoader("Učitavanje kataloga...");
     try {
         const res = await fetch(`${GAS_URL}?action=get_products`);
@@ -324,6 +329,9 @@ async function openCatalog() {
             state.catalog = data.products;
             if (state.catalog.length === 0) {
                 alert("Katalog je prazan! Provjeri postoji li sheet 'Proizvodi' ili 'Cjenik' u tvom Google Sheetu.");
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                hideLoader();
                 return;
             }
             renderCategories();
@@ -331,6 +339,8 @@ async function openCatalog() {
             document.getElementById('catalogModal').classList.add('active');
         }
     } catch (e) { alert("Greška pri učitavanju kataloga"); }
+    btn.innerHTML = originalText;
+    btn.disabled = false;
     hideLoader();
 }
 
@@ -506,12 +516,16 @@ function hideLoader() {
 function initPullToRefresh() {
     let startY = 0;
     const thresh = 150;
-    document.addEventListener('touchstart', (e) => {
-        if (window.scrollY === 0) startY = e.touches[0].pageY;
+    const main = document.getElementById('mainContent');
+    if (!main) return;
+
+    main.addEventListener('touchstart', (e) => {
+        if (main.scrollTop === 0) startY = e.touches[0].pageY;
     }, { passive: true });
-    document.addEventListener('touchend', (e) => {
+
+    main.addEventListener('touchend', (e) => {
         const endY = e.changedTouches[0].pageY;
-        if (window.scrollY === 0 && endY - startY > thresh) {
+        if (main.scrollTop === 0 && endY - startY > thresh) {
             refreshData();
         }
     }, { passive: true });
