@@ -11,7 +11,8 @@ let state = {
     selectedInquiry: null,
     charts: { yearly: null, monthly: null },
     catalog: [],
-    cart: []
+    cart: [],
+    activeCategory: 'Sve'
 };
 
 document.addEventListener('DOMContentLoaded', init);
@@ -347,12 +348,13 @@ async function openCatalog() {
 function renderCategories() {
     const cats = ["Ograde", "Hidro", "Termo", "Fasade"];
     const container = document.getElementById('categoryFilters');
-    container.innerHTML = `<div class="pill active" onclick="renderCatalog(state.catalog); document.querySelectorAll('.pill').forEach(p=>p.classList.remove('active')); this.classList.add('active');">Sve</div>`;
+    container.innerHTML = `<div class="pill active" onclick="state.activeCategory = 'Sve'; renderCatalog(state.catalog); document.querySelectorAll('.pill').forEach(p=>p.classList.remove('active')); this.classList.add('active');">Sve</div>`;
     cats.forEach(c => {
         const div = document.createElement('div');
         div.className = 'pill';
         div.innerText = c;
         div.onclick = () => {
+            state.activeCategory = c;
             const filtered = state.catalog.filter(p => (p.category || "").toUpperCase().includes(c.toUpperCase()));
             renderCatalog(filtered);
             document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
@@ -397,7 +399,14 @@ window.updateCart = function (sku, delta) {
     }
 
     updateCartUI();
-    renderCatalog(state.catalog); // Osvježi brojeve na karticama
+
+    // Osvježi uz očuvanje filtera
+    if (state.activeCategory === 'Sve') {
+        renderCatalog(state.catalog);
+    } else {
+        const filtered = state.catalog.filter(p => (p.category || "").toUpperCase().includes(state.activeCategory.toUpperCase()));
+        renderCatalog(filtered);
+    }
 };
 
 function updateCartUI() {
