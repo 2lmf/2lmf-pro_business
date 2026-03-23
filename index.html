@@ -26,9 +26,11 @@
         <header class="app-header">
             <div class="logo-box">
                 <span class="logo-text"><span class="accent-o">2LMF</span> PRO <span class="accent-o">BUSINESS</span>
-                    <small class="v-tag">v3.0.4</small></span>
+                    <small class="v-tag">v3.0.5</small></span>
             </div>
             <div class="header-actions">
+                <button id="btnRefresh" class="icon-btn" onclick="refreshData()"><i id="refreshIcon"
+                        class="fas fa-sync-alt"></i></button>
                 <button id="btnSettings" class="icon-btn"><i class="fas fa-cog"></i></button>
             </div>
         </header>
@@ -228,9 +230,6 @@
         </div>
     </div>
 
-    <div id="loader"
-        style="position:fixed; top:20px; right:20px; background:var(--accent-orange); color:#000; padding:10px 20px; border-radius:50px; font-weight:800; display:none; z-index:9999;">
-        Učitavanje...</div>
 
     <script src="app.js"></script>
 </body>

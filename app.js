@@ -22,6 +22,7 @@ async function init() {
     initScanner();
     initCatalog();
     await refreshData();
+    initPullToRefresh();
 
     const search = document.getElementById('inquirySearch');
     if (search) search.addEventListener('input', (e) => filterInquiries(e.target.value));
@@ -435,13 +436,19 @@ function recalcCheckoutTotal() {
 }
 
 async function submitOffer() {
+    const btn = document.getElementById('btnSubmitOffer');
+    const originalText = btn.innerHTML;
     const name = document.getElementById('chkName').value;
     const email = document.getElementById('chkEmail').value;
     const subject = document.getElementById('chkSubject').value;
 
     if (!name || !email) return alert("Ime i Email su obavezni!");
 
-    showLoader("Kreiranje ponude...");
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ŠALJEM...';
+    btn.style.background = 'var(--accent-orange)';
+    btn.style.color = '#000';
+
     try {
         const res = await fetch(GAS_URL, {
             method: 'POST',
@@ -455,20 +462,61 @@ async function submitOffer() {
         });
         const data = await res.json();
         if (data.status === 'success') {
-            alert("Ponuda uspješno kreirana i poslana! (ID: " + data.id + ")");
-            state.cart = [];
-            updateCartUI();
-            document.getElementById('checkoutModal').classList.remove('active');
-            document.getElementById('catalogModal').classList.remove('active');
-            refreshData();
+            btn.innerHTML = '<i class="fas fa-check"></i> POSLANO!';
+            btn.style.background = 'var(--success)';
+            setTimeout(() => {
+                state.cart = [];
+                updateCartUI();
+                document.getElementById('checkoutModal').classList.remove('active');
+                document.getElementById('catalogModal').classList.remove('active');
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                btn.style.background = 'var(--accent-orange)';
+                btn.style.color = '#fff';
+                refreshData();
+            }, 2000);
+        } else {
+            throw new Error(data.message);
         }
-    } catch (e) { alert("Greška pri slanju ponude."); }
-    hideLoader();
+    } catch (e) {
+        btn.innerHTML = '<i class="fas fa-times"></i> GREŠKA';
+        btn.style.background = 'var(--danger)';
+        setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            btn.style.background = 'var(--accent-orange)';
+            btn.style.color = '#fff';
+        }, 2000);
+    }
 }
 
 function formatCurrency(v) { return new Intl.NumberFormat('hr-HR', { style: 'currency', currency: 'EUR' }).format(v || 0); }
-function showLoader(m) { const l = document.getElementById('loader'); if (l) { l.innerText = m; l.style.display = "block"; } }
-function hideLoader() { const l = document.getElementById('loader'); if (l) l.style.display = "none"; }
+
+function showLoader(m) {
+    const icon = document.getElementById('refreshIcon');
+    if (icon) icon.classList.add('fa-spin', 'active');
+}
+
+function hideLoader() {
+    const icon = document.getElementById('refreshIcon');
+    if (icon) {
+        setTimeout(() => icon.classList.remove('fa-spin', 'active'), 500);
+    }
+}
+function initPullToRefresh() {
+    let startY = 0;
+    const thresh = 150;
+    document.addEventListener('touchstart', (e) => {
+        if (window.scrollY === 0) startY = e.touches[0].pageY;
+    }, { passive: true });
+    document.addEventListener('touchend', (e) => {
+        const endY = e.changedTouches[0].pageY;
+        if (window.scrollY === 0 && endY - startY > thresh) {
+            refreshData();
+        }
+    }, { passive: true });
+}
+
 function filterInquiries(query) {
     const q = query.toLowerCase();
     const filtered = state.inquiries.filter(i => (i.name || "").toLowerCase().includes(q) || (i.subject || "").toLowerCase().includes(q));
