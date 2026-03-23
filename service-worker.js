@@ -1,4 +1,4 @@
-const CACHE_NAME = 'shark-biz-v10';
+const CACHE_NAME = 'shark-biz-v11';
 const assets = [
     './',
     './index.html',

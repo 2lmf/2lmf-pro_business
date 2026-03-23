@@ -336,7 +336,15 @@ async function openCatalog() {
                 return;
             }
             renderCategories();
-            renderCatalog(data.products);
+
+            // Osvježi uz očuvanje filtera pri otvaranju
+            if (state.activeCategory === 'Sve') {
+                renderCatalog(state.catalog);
+            } else {
+                const filtered = state.catalog.filter(p => (p.category || "").toUpperCase().includes(state.activeCategory.toUpperCase()));
+                renderCatalog(filtered);
+            }
+
             document.getElementById('catalogModal').classList.add('active');
         }
     } catch (e) { alert("Greška pri učitavanju kataloga"); }
@@ -348,10 +356,15 @@ async function openCatalog() {
 function renderCategories() {
     const cats = ["Ograde", "Hidro", "Termo", "Fasade"];
     const container = document.getElementById('categoryFilters');
-    container.innerHTML = `<div class="pill active" onclick="state.activeCategory = 'Sve'; renderCatalog(state.catalog); document.querySelectorAll('.pill').forEach(p=>p.classList.remove('active')); this.classList.add('active');">Sve</div>`;
+
+    // SVE PILL
+    const isSveActive = state.activeCategory === 'Sve';
+    container.innerHTML = `<div class="pill ${isSveActive ? 'active' : ''}" onclick="state.activeCategory = 'Sve'; renderCatalog(state.catalog); document.querySelectorAll('.pill').forEach(p=>p.classList.remove('active')); this.classList.add('active');">Sve</div>`;
+
     cats.forEach(c => {
         const div = document.createElement('div');
-        div.className = 'pill';
+        const isActive = state.activeCategory === c;
+        div.className = `pill ${isActive ? 'active' : ''}`;
         div.innerText = c;
         div.onclick = () => {
             state.activeCategory = c;
