@@ -218,6 +218,56 @@ function initModal() {
     if (!modal) return;
     document.querySelectorAll('.close-modal').forEach(b => b.onclick = () => modal.classList.remove('active'));
     document.getElementById('btnCloseInquiry').onclick = () => modal.classList.remove('active');
+
+    // Slanje ponude/računa iz detalja
+    document.getElementById('btnSendOffer').onclick = () => sendWithFeedback('btnSendOffer', 'sendOffer');
+    document.getElementById('btnSendInvoice').onclick = () => sendWithFeedback('btnSendInvoice', 'sendInvoice');
+}
+
+async function sendWithFeedback(btnId, action) {
+    if (!state.selectedInquiry) return;
+    const btn = document.getElementById(btnId);
+    const originalText = btn.innerHTML;
+    const isOffer = action === 'sendOffer';
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ŠALJEM...';
+    btn.style.background = isOffer ? 'var(--accent-orange)' : 'var(--accent-cyan)';
+    btn.style.color = '#000';
+
+    try {
+        const res = await fetch(GAS_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: action, id: state.selectedInquiry.id })
+        });
+        const data = await res.json();
+        if (data.status === 'success') {
+            btn.innerHTML = '<i class="fas fa-check"></i> POSLANO!';
+            btn.style.background = 'var(--success)';
+            btn.style.border = '2px solid var(--success)';
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                btn.style.background = '#000';
+                btn.style.color = isOffer ? 'var(--accent-orange)' : 'var(--accent-cyan)';
+                btn.style.border = `2px solid ${isOffer ? 'var(--accent-orange)' : 'var(--accent-cyan)'}`;
+                refreshData();
+            }, 3000);
+        } else {
+            throw new Error(data.message);
+        }
+    } catch (e) {
+        btn.innerHTML = '<i class="fas fa-times"></i> GREŠKA';
+        btn.style.background = 'var(--danger)';
+        btn.style.border = '2px solid var(--danger)';
+        setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            btn.style.background = '#000';
+            btn.style.color = isOffer ? 'var(--accent-orange)' : 'var(--accent-cyan)';
+            btn.style.border = `2px solid ${isOffer ? 'var(--accent-orange)' : 'var(--accent-cyan)'}`;
+        }, 3000);
+    }
 }
 
 function initScanner() {
