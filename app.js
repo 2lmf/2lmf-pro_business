@@ -1,6 +1,6 @@
 /**
- * 2LMF PRO BUSINESS - CLASSIC FRONTEND 🦈📂
- * Verzija: 2.9.6 (3-TAB LAYOUT + SENDING FIX)
+ * 2LMF PRO BUSINESS - FRONTEND FIX 🦈🛠️
+ * Verzija: 2.9.7 (TAB FIX + SCANNER ALIVE)
  */
 
 const GAS_URL = "https://script.google.com/macros/s/AKfycbx4TQ6cFNr8X-fNRHE0Ai571pAioDeny_mSSrTVQm3OHbTKOhfIEDiKDFM2shZ5zDFLrA/exec";
@@ -17,9 +17,9 @@ document.addEventListener('DOMContentLoaded', init);
 async function init() {
     setupTabs();
     initModal();
+    initScanner();
     await refreshData();
 
-    // Search listener
     const search = document.getElementById('inquirySearch');
     if (search) search.addEventListener('input', (e) => filterInquiries(e.target.value));
 
@@ -40,8 +40,9 @@ function switchTab(id) {
     document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
 
-    // Map dashboard to dashboard, but inquiries to tab-inquiries
+    // Exact mapping for v2.9.7
     let realId = `tab-${id}`;
+    if (id === 'dashboard') realId = 'tab-dashboard';
     if (id === 'inquiries') realId = 'tab-inquiries';
     if (id === 'receipts') realId = 'tab-receipts';
 
@@ -50,6 +51,18 @@ function switchTab(id) {
 
     const nav = document.querySelector(`[data-tab="${id}"]`);
     if (nav) nav.classList.add('active');
+}
+
+function initScanner() {
+    const fileInput = document.getElementById('fileInput');
+    if (fileInput) {
+        fileInput.addEventListener('change', async (e) => {
+            if (e.target.files.length > 0) {
+                alert("🤖 AI Obrada u tijeku... (Ovo će biti spojeno na Google Cloud Vision)");
+                // Ovdje ide implementacija upload-a za OCR
+            }
+        });
+    }
 }
 
 async function refreshData() {
@@ -100,7 +113,7 @@ function renderInquiries(data = state.inquiries) {
     const list = document.getElementById('inquiryList');
     if (!list) return;
     list.innerHTML = data.map(item => `
-        <div class="inquiry-item shadow-premium" onclick="handleInquiryAction('${item.id}')" style="cursor:pointer; margin-bottom:12px; display:flex; justify-content:space-between; padding:15px; background:rgba(255,255,255,0.02); border-radius:15px;">
+        <div class="inquiry-item shadow-premium" onclick="handleInquiryAction('${item.id}')" style="cursor:pointer; margin-bottom:12px; display:flex; justify-content:space-between; padding:15px; background:rgba(255,255,255,0.02); border-radius:15px; border: 1px solid rgba(255,255,255,0.05);">
             <div class="item-main">
                 <span class="item-title">${item.name || "Bez imena"}</span>
                 <span class="item-meta">${item.id.split('-')[0]} • ${item.subject}</span>
@@ -118,6 +131,7 @@ function renderCharts() {
     const stats = state.stats;
     const ctxY = document.getElementById('yearlyChart');
     const ctxM = document.getElementById('monthlyChart');
+    if (!ctxY || !ctxM) return;
 
     if (state.charts.yearly) state.charts.yearly.destroy();
     if (state.charts.monthly) state.charts.monthly.destroy();
@@ -227,6 +241,7 @@ async function saveInquiryChanges() {
 
 function initModal() {
     const modal = document.getElementById('inquiryModal');
+    if (!modal) return;
     document.querySelectorAll('.close-modal').forEach(b => b.onclick = () => modal.classList.remove('active'));
     document.getElementById('btnCloseInquiry').onclick = () => modal.classList.remove('active');
     document.getElementById('btnSaveChanges').onclick = saveInquiryChanges;

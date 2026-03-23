@@ -24,7 +24,7 @@
         <header class="app-header">
             <div class="logo-box">
                 <span class="logo-text"><span class="accent-o">2LMF</span> PRO <span class="accent-o">BUSINESS</span>
-                    <small class="v-tag">v2.9.6</small></span>
+                    <small class="v-tag">v2.9.7</small></span>
             </div>
             <div class="header-actions">
                 <button id="btnSettings" class="icon-btn"><i class="fas fa-cog"></i></button>
@@ -33,7 +33,7 @@
 
         <!-- MAIN -->
         <main id="mainContent" class="app-main">
-            <!-- TAB: DASHBOARD (STATUS) -->
+            <!-- TAB: DASHBOARD -->
             <section id="tab-dashboard" class="tab-content active">
                 <div class="dashboard-grid">
                     <div class="stat-card glass-card">
@@ -45,16 +45,6 @@
                         <span class="card-label">TROŠKOVI (MJ)</span>
                         <h2 id="monthlyExpenses" style="color: var(--accent-cyan)">0.00 €</h2>
                         <div class="trend">Ovaj mjesec</div>
-                    </div>
-                    <div class="stat-card glass-card">
-                        <span class="card-label">GODIŠNJI PRIHODI</span>
-                        <h2 id="yearlyRevenueDisplay" style="color: var(--success)">0.00 €</h2>
-                        <div class="trend">Ukupno 2026</div>
-                    </div>
-                    <div class="stat-card glass-card">
-                        <span class="card-label">GODIŠNJI TROŠKOVI</span>
-                        <h2 id="yearlyExpensesDisplay" style="color: var(--accent-cyan)">0.00 €</h2>
-                        <div class="trend">Ukupno 2026</div>
                     </div>
                 </div>
 
@@ -75,12 +65,9 @@
                 </div>
             </section>
 
-            <!-- TAB: INQUIRIES (PONUDE) -->
+            <!-- TAB: INQUIRIES -->
             <section id="tab-inquiries" class="tab-content">
                 <div class="action-header" style="padding: 0 20px 20px;">
-                    <button id="btnNewInquiry" class="btn-primary" style="width: 100%; margin-bottom: 15px;">
-                        <i class="fas fa-plus-circle"></i> NOVA PONUDA
-                    </button>
                     <div class="premium-search">
                         <i class="fas fa-search"></i>
                         <input type="text" id="inquirySearch" placeholder="Traži kupca ili predmet...">
@@ -89,7 +76,7 @@
                 <div id="inquiryList" class="activity-list" style="padding: 0 20px;"></div>
             </section>
 
-            <!-- TAB: RECEIPTS (TROŠKOVI) -->
+            <!-- TAB: RECEIPTS -->
             <section id="tab-receipts" class="tab-content">
                 <div class="scanner-hero glass-card">
                     <i class="fas fa-receipt hero-icon"></i>
@@ -118,7 +105,7 @@
         </nav>
     </div>
 
-    <!-- MODAL: INQUIRY -->
+    <!-- MODAL -->
     <div id="inquiryModal" class="modal">
         <div class="modal-content glass-card">
             <div class="modal-header">
@@ -136,19 +123,15 @@
                     <span class="label">UKUPNO:</span><span id="detAmount" class="value">0.00 €</span>
                 </div>
             </div>
-            <div class="modal-footer vertical" style="padding-top: 20px;">
+            <div class="modal-footer"
+                style="padding-top: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <button id="btnSendOffer" class="btn-primary" style="font-size: 0.7rem;">PONUDA</button>
+                <button id="btnSendInvoice" class="btn-primary"
+                    style="background:var(--accent-cyan); font-size: 0.7rem;">RAČUN</button>
+                <button id="btnCloseInquiry" class="btn-secondary"
+                    style="grid-column: span 2; margin-top: 5px;">Zatvori</button>
                 <button id="btnSaveChanges" class="btn-success"
-                    style="display:none; width: 100%; margin-bottom: 12px; height: 50px;">
-                    <i class="fas fa-save"></i> SPREMI IZMJENE
-                </button>
-                <div class="action-grid"
-                    style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin-bottom: 12px;">
-                    <button id="btnSendOffer" class="btn-primary" style="height: 50px; font-size: 0.7rem;">POŠALJI
-                        PONUDU</button>
-                    <button id="btnSendInvoice" class="btn-cyan" style="height: 50px; font-size: 0.7rem;">POŠALJI
-                        RAČUN</button>
-                </div>
-                <button id="btnCloseInquiry" class="btn-secondary" style="width: 100%; height: 45px;">Zatvori</button>
+                    style="display:none; grid-column: span 2;">SPREMI</button>
             </div>
         </div>
     </div>
@@ -156,7 +139,6 @@
     <div id="loader"
         style="position:fixed; top:20px; right:20px; background:var(--accent-orange); color:#000; padding:10px 20px; border-radius:50px; font-weight:800; display:none; z-index:9999;">
         Učitavanje...</div>
-
     <script src="app.js"></script>
 </body>
 
