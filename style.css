@@ -1,7 +1,7 @@
 /* 
    2LMF PRO HUB - PREMIUM DARK MODE UI 
    Aesthetic: Glassmorphism, Deep Dark, Vibrant Accents (Orange/Cyan)
-   Version: 2.8 (FIXED CHARTS + IMPROVED LABELS)
+   Version: 2.9 (YEARLY TOTALS + SCROLL FIX)
 */
 
 :root {
@@ -72,12 +72,14 @@ body {
     margin-left: 5px;
 }
 
-/* --- MAIN --- */
+/* --- MAIN (SCROLLABLE) --- */
 .app-main {
     flex: 1;
     overflow-y: auto;
     padding: 20px;
-    padding-bottom: calc(var(--nav-height) + 20px);
+    padding-bottom: calc(var(--nav-height) + 40px);
+    /* Extra space for scrolling */
+    -webkit-overflow-scrolling: touch;
 }
 
 .tab-content {
@@ -113,7 +115,7 @@ body {
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
-/* --- CHARTS (v2.8 FIXED) --- */
+/* --- CHARTS --- */
 .charts-container {
     display: flex;
     flex-direction: column;
@@ -195,13 +197,13 @@ body {
 
 .card-label {
     font-family: 'Orbitron', sans-serif;
-    font-size: 0.6rem;
+    font-size: 0.55rem;
     color: var(--text-secondary);
-    letter-spacing: 1px;
+    letter-spacing: 1.2px;
 }
 
 .stat-card h2 {
-    font-size: 1.4rem;
+    font-size: 1.3rem;
     font-weight: 800;
 }
 
@@ -231,7 +233,15 @@ body {
     outline: none;
 }
 
-/* --- LISTS --- */
+/* --- LISTS (SCROLL FIX) --- */
+.activity-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-bottom: 40px;
+    /* Padding for bottom of the list */
+}
+
 .inquiry-item {
     background: rgba(255, 255, 255, 0.04);
     border: 1px solid var(--glass-border);
@@ -240,7 +250,6 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 15px;
 }
 
 .item-main {
@@ -318,30 +327,14 @@ body {
     max-height: 90vh;
 }
 
-.section-title {
-    font-size: 0.75rem;
-    font-weight: 800;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    margin-bottom: 15px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    padding-bottom: 5px;
-}
-
-.product-edit-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
 .p-item {
     display: flex;
-    align-items: center;
-    gap: 12px;
+    align-items: flex-end;
+    gap: 10px;
     background: rgba(255, 255, 255, 0.06);
     padding: 12px;
     border-radius: 12px;
+    margin-bottom: 8px;
 }
 
 .p-name {
@@ -351,15 +344,29 @@ body {
     color: #eee;
 }
 
+.p-col-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.p-small-label {
+    font-size: 0.6rem;
+    color: var(--text-secondary);
+    text-transform: lowercase;
+}
+
 .p-input {
     background: #000;
     border: 1.5px solid var(--accent-orange);
     color: var(--accent-orange);
-    padding: 7px;
+    padding: 5px;
     border-radius: 8px;
     text-align: center;
     font-weight: 800;
-    width: 65px;
+    width: 60px;
+    font-size: 0.85rem;
 }
 
 .detail-row {
