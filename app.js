@@ -1,9 +1,5 @@
-/**
- * 2LMF PRO BUSINESS - FRONTEND REFRESH 🦈📊
- * Verzija: 2.9.9 (PRODUCT MODAL FIX + LABELS)
- */
-
-const GAS_URL = "https://script.google.com/macros/s/AKfycbx4TQ6cFNr8X-fNRHE0Ai571pAioDeny_mSSrTVQm3OHbTKOhfIEDiKDFM2shZ5zDFLrA/exec";
+const DEFAULT_GAS_URL = "https://script.google.com/macros/s/AKfycbx4TQ6cFNr8X-fNRHE0Ai571pAioDeny_mSSrTVQm3OHbTKOhfIEDiKDFM2shZ5zDFLrA/exec";
+const GAS_URL = localStorage.getItem('SHARK_GAS_URL') || DEFAULT_GAS_URL;
 
 let state = {
     inquiries: [],
