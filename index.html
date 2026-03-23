@@ -7,8 +7,6 @@
     <title>Shark Business | 2LMF PRO</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#020205">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="icons/icon-192.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -26,7 +24,7 @@
         <header class="app-header">
             <div class="logo-box">
                 <span class="logo-text"><span class="accent-o">2LMF</span> PRO <span class="accent-o">BUSINESS</span>
-                    <small class="v-tag">v2.9.5</small></span>
+                    <small class="v-tag">v2.9.6</small></span>
             </div>
             <div class="header-actions">
                 <button id="btnSettings" class="icon-btn"><i class="fas fa-cog"></i></button>
@@ -35,7 +33,7 @@
 
         <!-- MAIN -->
         <main id="mainContent" class="app-main">
-            <!-- TAB: DASHBOARD -->
+            <!-- TAB: DASHBOARD (STATUS) -->
             <section id="tab-dashboard" class="tab-content active">
                 <div class="dashboard-grid">
                     <div class="stat-card glass-card">
@@ -63,31 +61,35 @@
                 <div class="charts-container">
                     <div class="chart-card glass-card">
                         <span class="card-label">GODIŠNJA ANALITIKA</span>
-                        <canvas id="yearlyChart"></canvas>
+                        <div style="height:150px;"><canvas id="yearlyChart"></canvas></div>
                     </div>
                     <div class="chart-card glass-card">
                         <span class="card-label">MJESEČNI ODNOS</span>
-                        <canvas id="monthlyChart"></canvas>
+                        <div style="height:150px;"><canvas id="monthlyChart"></canvas></div>
                     </div>
                 </div>
 
-                <div class="activity-card glass-card shadow-premium" style="margin-bottom: 20px;">
+                <div class="activity-card glass-card shadow-premium" style="margin-bottom: 30px;">
                     <span class="card-label">ZADNJE AKTIVNOSTI (IRA/URA)</span>
                     <div id="activityList" class="activity-list" style="margin-top: 15px;"></div>
                 </div>
+            </section>
 
-                <!-- NEW: INQUIRIES ON DASHBOARD -->
-                <div class="activity-card glass-card shadow-premium" style="margin-bottom: 80px;">
-                    <span class="card-label">PRODAJNI UPITI I PONUDE</span>
-                    <div class="premium-search" style="margin-top: 15px;">
+            <!-- TAB: INQUIRIES (PONUDE) -->
+            <section id="tab-inquiries" class="tab-content">
+                <div class="action-header" style="padding: 0 20px 20px;">
+                    <button id="btnNewInquiry" class="btn-primary" style="width: 100%; margin-bottom: 15px;">
+                        <i class="fas fa-plus-circle"></i> NOVA PONUDA
+                    </button>
+                    <div class="premium-search">
                         <i class="fas fa-search"></i>
                         <input type="text" id="inquirySearch" placeholder="Traži kupca ili predmet...">
                     </div>
-                    <div id="inquiryList" class="activity-list" style="margin-top: 10px;"></div>
                 </div>
+                <div id="inquiryList" class="activity-list" style="padding: 0 20px;"></div>
             </section>
 
-            <!-- TAB: RECEIPTS (HIDDEN TABS FOR NOW IF USER WANTS ONE PAGE, BUT KEEPING SECTION FOR APP.JS) -->
+            <!-- TAB: RECEIPTS (TROŠKOVI) -->
             <section id="tab-receipts" class="tab-content">
                 <div class="scanner-hero glass-card">
                     <i class="fas fa-receipt hero-icon"></i>
@@ -102,10 +104,13 @@
             </section>
         </main>
 
-        <!-- NAV (SIMPLIFIED TO STATUS & TROŠKOVI) -->
+        <!-- NAV -->
         <nav class="app-nav">
             <a href="#" class="nav-item active" data-tab="dashboard">
                 <i class="fas fa-chart-line"></i><span>Status</span>
+            </a>
+            <a href="#" class="nav-item" data-tab="inquiries">
+                <i class="fas fa-file-invoice"></i><span>Ponude</span>
             </a>
             <a href="#" class="nav-item" data-tab="receipts">
                 <i class="fas fa-receipt"></i><span>Troškovi</span>

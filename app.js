@@ -1,6 +1,6 @@
 /**
- * 2LMF PRO BUSINESS - FRONTEND REVERSION 🦈⏪
- * Verzija: 2.9.5 (UI RESTORATION + SENDING FIX)
+ * 2LMF PRO BUSINESS - CLASSIC FRONTEND 🦈📂
+ * Verzija: 2.9.6 (3-TAB LAYOUT + SENDING FIX)
  */
 
 const GAS_URL = "https://script.google.com/macros/s/AKfycbx4TQ6cFNr8X-fNRHE0Ai571pAioDeny_mSSrTVQm3OHbTKOhfIEDiKDFM2shZ5zDFLrA/exec";
@@ -40,7 +40,12 @@ function switchTab(id) {
     document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
 
-    const target = document.getElementById(`tab-${id}`);
+    // Map dashboard to dashboard, but inquiries to tab-inquiries
+    let realId = `tab-${id}`;
+    if (id === 'inquiries') realId = 'tab-inquiries';
+    if (id === 'receipts') realId = 'tab-receipts';
+
+    const target = document.getElementById(realId);
     if (target) target.classList.add('active');
 
     const nav = document.querySelector(`[data-tab="${id}"]`);
@@ -95,7 +100,7 @@ function renderInquiries(data = state.inquiries) {
     const list = document.getElementById('inquiryList');
     if (!list) return;
     list.innerHTML = data.map(item => `
-        <div class="inquiry-item shadow-premium" onclick="handleInquiryAction('${item.id}')" style="cursor:pointer; margin-bottom:12px;">
+        <div class="inquiry-item shadow-premium" onclick="handleInquiryAction('${item.id}')" style="cursor:pointer; margin-bottom:12px; display:flex; justify-content:space-between; padding:15px; background:rgba(255,255,255,0.02); border-radius:15px;">
             <div class="item-main">
                 <span class="item-title">${item.name || "Bez imena"}</span>
                 <span class="item-meta">${item.id.split('-')[0]} • ${item.subject}</span>
@@ -103,7 +108,7 @@ function renderInquiries(data = state.inquiries) {
             </div>
             <div class="item-action" style="display:flex; flex-direction:column; align-items:flex-end; justify-content:center;">
                 <b style="color:#fff;">${formatCurrency(item.amount)}</b>
-                <button class="btn-pill-small" style="margin-top:5px;">DETALJI</button>
+                <button class="btn-pill-small" style="margin-top:5px; background:var(--accent-orange); color:#000; border:none; padding:5px 12px; border-radius:50px; font-size:0.7rem; font-weight:800;">DETALJI</button>
             </div>
         </div>
     `).join('');
@@ -176,15 +181,15 @@ function handleInquiryAction(id) {
 function renderProductList(products) {
     const list = document.getElementById('productList');
     list.innerHTML = products.map((p, idx) => `
-        <div class="p-item">
-            <div class="p-name">${p.naziv || p.name || "Artikl"}</div>
+        <div class="p-item" style="display:flex; align-items:center; gap:10px; margin-bottom:10px; padding:10px; background:rgba(255,255,255,0.03); border-radius:10px;">
+            <div class="p-name" style="flex:1; font-size:0.8rem; font-weight:600;">${p.naziv || p.name || "Artikl"}</div>
             <div class="p-col-group">
-                <span class="p-small-label">kol</span>
-                <input type="number" class="p-input" value="${p.kolicina || 0}" onchange="updateLocalProduct(${idx}, 'qty', this.value)">
+                <span class="p-small-label" style="font-size:0.6rem; color:var(--accent-orange); font-weight:800; text-transform:uppercase;">kol</span>
+                <input type="number" class="p-input" value="${p.kolicina || 0}" style="width:60px; background:none; border:none; color:#fff; text-align:right; font-weight:800;" onchange="updateLocalProduct(${idx}, 'qty', this.value)">
             </div>
             <div class="p-col-group">
-                <span class="p-small-label">cij</span>
-                <input type="number" class="p-input" value="${p.cijena || 0}" onchange="updateLocalProduct(${idx}, 'price', this.value)">
+                <span class="p-small-label" style="font-size:0.6rem; color:var(--accent-orange); font-weight:800; text-transform:uppercase;">cij</span>
+                <input type="number" class="p-input" value="${p.cijena || 0}" style="width:60px; background:none; border:none; color:#fff; text-align:right; font-weight:800;" onchange="updateLocalProduct(${idx}, 'price', this.value)">
             </div>
         </div>
     `).join('');
