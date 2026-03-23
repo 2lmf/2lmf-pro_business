@@ -5,246 +5,160 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Shark Business | 2LMF PRO</title>
-
-    <!-- PWA Meta Tags -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#020205">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="icons/icon-192.png">
-
-    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
         href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600;700&display=swap"
         rel="stylesheet">
-
-    <!-- Icons (FontAwesome) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <!-- Charts Support -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-    <!-- Styles -->
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-    <!-- App Shell -->
     <div id="app" class="app-container">
-        <!-- Header -->
+        <!-- HEADER -->
         <header class="app-header">
             <div class="logo-box">
                 <span class="logo-text"><span class="accent-o">2LMF</span> PRO <span class="accent-o">BUSINESS</span>
-                    <small class="v-tag">v2.7</small></span>
+                    <small class="v-tag">v2.9.2</small></span>
             </div>
             <div class="header-actions">
-                <button id="btnSettings" class="icon-btn" title="Postavke">
-                    <i class="fas fa-cog"></i>
-                </button>
+                <button id="btnSettings" class="icon-btn"><i class="fas fa-cog"></i></button>
             </div>
         </header>
 
-        <!-- Main Content (Tabs) -->
+        <!-- MAIN -->
         <main id="mainContent" class="app-main">
-            <!-- TAB: Dashboard -->
+            <!-- TAB: DASHBOARD -->
             <section id="tab-dashboard" class="tab-content active">
                 <div class="dashboard-grid">
                     <div class="stat-card glass-card">
-                        <span class="card-label">PRIHODI (IRA)</span>
+                        <span class="card-label">PRIHODI (MJ)</span>
                         <h2 id="monthlyRevenue">0.00 €</h2>
-                        <div class="trend up" id="revenueTrend">Ovaj mjesec</div>
+                        <div class="trend up">Ovaj mjesec</div>
                     </div>
                     <div class="stat-card glass-card">
-                        <span class="card-label">TROŠKOVI (URA)</span>
+                        <span class="card-label">TROŠKOVI (MJ)</span>
                         <h2 id="monthlyExpenses" style="color: var(--accent-cyan)">0.00 €</h2>
-                        <div class="trend" id="expenseTrend" style="color: var(--text-secondary)">Ovaj mjesec</div>
+                        <div class="trend">Ovaj mjesec</div>
                     </div>
                     <div class="stat-card glass-card">
                         <span class="card-label">GODIŠNJI PRIHODI</span>
                         <h2 id="yearlyRevenueDisplay" style="color: var(--success)">0.00 €</h2>
-                        <div class="trend">Ukupno ${new Date().getFullYear()}</div>
+                        <div class="trend">Ukupno 2026</div>
                     </div>
                     <div class="stat-card glass-card">
                         <span class="card-label">GODIŠNJI TROŠKOVI</span>
                         <h2 id="yearlyExpensesDisplay" style="color: var(--accent-cyan)">0.00 €</h2>
-                        <div class="trend">Ukupno ${new Date().getFullYear()}</div>
+                        <div class="trend">Ukupno 2026</div>
                     </div>
                 </div>
 
-                <!-- Charts Section -->
                 <div class="charts-container">
                     <div class="chart-card glass-card">
-                        <span class="card-label">GODIŠNJA ANALITIKA (MJESECI)</span>
+                        <span class="card-label">GODIŠNJA ANALITIKA</span>
                         <canvas id="yearlyChart"></canvas>
                     </div>
                     <div class="chart-card glass-card">
-                        <span class="card-label">TEKUĆI MJESEC (DANI)</span>
+                        <span class="card-label">MJESEČNI ODNOS</span>
                         <canvas id="monthlyChart"></canvas>
                     </div>
                 </div>
 
-                <div class="loading-shimmer"></div>
-    </div>
-    </section>
+                <div class="activity-card glass-card shadow-premium">
+                    <span class="card-label">ZADNJE AKTIVNOSTI (IRA/URA)</span>
+                    <div id="activityList" class="activity-list" style="margin-top: 15px;"></div>
+                </div>
+            </section>
 
-    <!-- TAB: Inquiries -->
-    <section id="tab-inquiries" class="tab-content">
-        <div class="action-header" style="margin-bottom: 20px;">
-            <button class="btn-primary" style="width: 100%; justify-content: center; margin-bottom: 15px;">
-                <i class="fas fa-plus-circle"></i> NOVI UPIT / PONUDA
-            </button>
-            <div class="premium-search">
-                <i class="fas fa-search"></i>
-                <input type="text" id="inquirySearch" placeholder="Traži kupca, broj ili predmet...">
-            </div>
-        </div>
-        <div id="inquiryList" class="list-container">
-            <!-- Inquiries will be rendered here -->
-        </div>
-    </section>
+            <!-- TAB: INQUIRIES -->
+            <section id="tab-inquiries" class="tab-content">
+                <div class="action-header" style="margin-bottom: 20px;">
+                    <button id="btnNewInquiry" class="btn-primary" style="width: 100%; margin-bottom: 15px;">
+                        <i class="fas fa-plus-circle"></i> NOVA PONUDA
+                    </button>
+                    <div class="premium-search">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="inquirySearch" placeholder="Traži kupca ili predmet...">
+                    </div>
+                </div>
+                <div id="inquiryList" class="list-container"></div>
+            </section>
 
-    <!-- TAB: Receipts (Scanner) -->
-    <section id="tab-receipts" class="tab-content">
-        <div class="scanner-hero glass-card">
-            <i class="fas fa-receipt hero-icon"></i>
-            <h2>Shark Receipt 🤖</h2>
-            <p>Slikaj račun i AI će ga sam proknjižiti u tvoj Dnevnik.</p>
+            <!-- TAB: RECEIPTS -->
+            <section id="tab-receipts" class="tab-content">
+                <div class="scanner-hero glass-card">
+                    <i class="fas fa-receipt hero-icon"></i>
+                    <h2>Shark Receipt 🤖</h2>
+                    <p>Slikaj račun za AI knjiženje.</p>
+                    <label for="fileInput" class="btn-primary">
+                        <i class="fas fa-camera"></i> SKENIRAJ RAČUN
+                        <input type="file" id="fileInput" accept="image/*" capture="environment" style="display:none;">
+                    </label>
+                </div>
+                <div id="receiptHistory" class="history-list"></div>
+            </section>
+        </main>
 
-            <label for="fileInput" class="btn-primary">
-                <i class="fas fa-camera"></i> SKENIRAJ RAČUN
-                <input type="file" id="fileInput" accept="image/*" capture="environment" style="display:none;">
-            </label>
-        </div>
-
-        <div class="section-header">
-            <h3>ULAZNI RAČUNI (URA)</h3>
-        </div>
-        <div id="receiptHistory" class="history-list">
-            <!-- Receipts from history -->
-        </div>
-    </section>
-    </main>
-
-    <!-- Navigation Bar (Mobile Bottom) -->
-    <nav class="app-nav">
-        <a href="#" class="nav-item active" data-tab="dashboard">
-            <i class="fas fa-chart-line"></i>
-            <span>Status</span>
-        </a>
-        <a href="#" class="nav-item" data-tab="inquiries">
-            <i class="fas fa-file-invoice"></i>
-            <span>Ponude</span>
-        </a>
-        <a href="#" class="nav-item" data-tab="receipts">
-            <i class="fas fa-receipt"></i>
-            <span>Troškovi</span>
-        </a>
-    </nav>
+        <!-- NAV -->
+        <nav class="app-nav">
+            <a href="#" class="nav-item active" data-tab="dashboard">
+                <i class="fas fa-chart-line"></i><span>Status</span>
+            </a>
+            <a href="#" class="nav-item" data-tab="inquiries">
+                <i class="fas fa-file-invoice"></i><span>Ponude</span>
+            </a>
+            <a href="#" class="nav-item" data-tab="receipts">
+                <i class="fas fa-receipt"></i><span>Troškovi</span>
+            </a>
+        </nav>
     </div>
 
-    <!-- Modal: Inquiry Details -->
+    <!-- MODAL: INQUIRY -->
     <div id="inquiryModal" class="modal">
         <div class="modal-content glass-card">
             <div class="modal-header">
                 <h2>Detalji Upita</h2>
                 <button class="close-modal">&times;</button>
             </div>
-            <div class="modal-body" id="inquiryDetailsBody">
-                <div class="detail-row">
-                    <span class="label">KUPAC:</span>
-                    <span id="detName" class="value">-</span>
+            <div class="modal-body" id="inquiryDetailsBody" style="margin-top: 20px;">
+                <div class="detail-row"><span class="label">KUPAC:</span><span id="detName" class="value">-</span></div>
+                <div class="detail-row"><span class="label">EMAIL:</span><span id="detEmail" class="value">-</span>
                 </div>
-                <div class="detail-row">
-                    <span class="label">EMAIL:</span>
-                    <span id="detEmail" class="value">-</span>
-                </div>
-
                 <div class="section-title" style="margin-top: 20px;">STAVKE PONUDE</div>
-                <div id="productList" class="product-edit-list">
-                    <!-- Ovdje idu proizvodi iz JSON-a -->
-                </div>
-
+                <div id="productList" class="product-edit-list"></div>
                 <div class="detail-row highlight"
                     style="margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
-                    <span class="label">UKUPNO:</span>
-                    <span id="detAmount" class="value">0.00 €</span>
+                    <span class="label">UKUPNO:</span><span id="detAmount" class="value">0.00 €</span>
                 </div>
             </div>
-            <div class="modal-footer vertical" style="padding: 15px 20px;">
+            <div class="modal-footer vertical" style="padding-top: 20px;">
                 <button id="btnSaveChanges" class="btn-success"
                     style="display:none; width: 100%; margin-bottom: 12px; height: 50px;">
                     <i class="fas fa-save"></i> SPREMI IZMJENE
                 </button>
                 <div class="action-grid"
                     style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin-bottom: 12px;">
-                    <button id="btnSendOffer" class="btn-primary" style="height: 50px;">
-                        <i class="fas fa-paper-plane"></i> POŠALJI PONUDU
-                    </button>
-                    <button id="btnSendInvoice" class="btn-cyan" style="height: 50px;">
-                        <i class="fas fa-file-invoice-dollar"></i> POŠALJI RAČUN
-                    </button>
+                    <button id="btnSendOffer" class="btn-primary" style="height: 50px; font-size: 0.7rem;">POŠALJI
+                        PONUDU</button>
+                    <button id="btnSendInvoice" class="btn-cyan" style="height: 50px; font-size: 0.7rem;">POŠALJI
+                        RAČUN</button>
                 </div>
                 <button id="btnCloseInquiry" class="btn-secondary" style="width: 100%; height: 45px;">Zatvori</button>
             </div>
         </div>
     </div>
 
-    <!-- Modal: Review Scan -->
-    <div id="previewModal" class="modal">
-        <div class="modal-content glass-card">
-            <div class="modal-header">
-                <h2>Provjera AI Skena</h2>
-                <button class="close-modal">&times;</button>
-            </div>
-            <div class="modal-body">
-                <form id="editReceiptForm">
-                    <div class="form-group">
-                        <label>Dobavljač</label>
-                        <input type="text" id="editDobavljac">
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Datum</label>
-                            <input type="text" id="editDatum">
-                        </div>
-                        <div class="form-group">
-                            <label>Iznos (€)</label>
-                            <input type="number" step="0.01" id="editIznos">
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label>Kategorija</label>
-                        <select id="editKategorija">
-                            <option value="Gorivo">Gorivo</option>
-                            <option value="Ured">Ured</option>
-                            <option value="Reprezentacija">Reprezentacija</option>
-                            <option value="Materijal">Materijal</option>
-                            <option value="Ostalo" selected>Ostalo</option>
-                        </select>
-                    </div>
-                    <!-- Hidden fields -->
-                    <input type="hidden" id="editRawImageName">
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button id="btnCancelScan" class="btn-secondary">Odustani</button>
-                <button id="btnConfirmScan" class="btn-primary">PROKNJIŽI</button>
-            </div>
-        </div>
-    </div>
+    <div id="loader"
+        style="position:fixed; top:20px; right:20px; background:var(--accent-orange); color:#000; padding:10px 20px; border-radius:50px; font-weight:800; display:none; z-index:9999;">
+        Učitavanje...</div>
 
-    <!-- PWA Service Worker Registration -->
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('service-worker.js')
-                    .then(reg => console.log('Service Worker registered!'))
-                    .catch(err => console.error('SW registration failed:', err));
-            });
-        }
-    </script>
     <script src="app.js"></script>
 </body>
 

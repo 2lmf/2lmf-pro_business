@@ -1,6 +1,6 @@
 /**
  * 2LMF PRO BUSINESS - FRONTEND CORE 🦈🚀
- * Verzija: 2.9.1 (DASHBOARD SCROLL + NEW OFFER BUTTON FIX)
+ * Verzija: 2.9.2 (CRITICAL FIX - BUTTONS & SYNC)
  */
 
 const GAS_URL = "https://script.google.com/macros/s/AKfycbx4TQ6cFNr8X-fNRHE0Ai571pAioDeny_mSSrTVQm3OHbTKOhfIEDiKDFM2shZ5zDFLrA/exec";
@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initNavigation();
     initScanner();
     initModal();
-    initSpecialButtons(); // Added for "New Offer"
+    initSpecialButtons();
     refreshData();
 });
 
@@ -36,7 +36,8 @@ function initNavigation() {
 function initSpecialButtons() {
     const btnNew = document.getElementById('btnNewInquiry');
     if (btnNew) {
-        btnNew.onclick = () => {
+        btnNew.onclick = (e) => {
+            e.preventDefault();
             alert("Sustav za slaganje nove ponude iz kataloga (v3.0) je u planu za sutra! Karlo, pročitaj moj komentar. 🦈");
         };
     }
@@ -58,7 +59,10 @@ function switchTab(tabId) {
 
 // --- DATA SYNC ---
 async function refreshData() {
-    showLoader("Učitavanje v2.9.1...");
+    showLoader("Učitavanje v2.9.2...");
+    const loader = document.getElementById('loader');
+    if (loader) loader.style.display = "block";
+
     try {
         const response = await fetch(`${GAS_URL}?action=get_dashboard_data&cb=${Date.now()}`);
         const result = await response.json();
@@ -68,15 +72,24 @@ async function refreshData() {
             renderDashboard();
             renderInquiries();
             setTimeout(updateCharts, 600);
+        } else {
+            console.error("API Error", result);
         }
-    } catch (err) { console.error("Fetch Error:", err); } finally { hideLoader(); }
+    } catch (err) {
+        console.error("Fetch Error:", err);
+    } finally {
+        if (loader) loader.style.display = "none";
+    }
 }
 
 // --- RENDERERS ---
 function renderDashboard() {
     const stats = state.stats;
-    document.getElementById('monthlyRevenue').innerText = formatCurrency(stats.revenue);
-    document.getElementById('monthlyExpenses').innerText = formatCurrency(stats.expenses);
+    const mr = document.getElementById('monthlyRevenue');
+    if (mr) mr.innerText = formatCurrency(stats.revenue);
+
+    const me = document.getElementById('monthlyExpenses');
+    if (me) me.innerText = formatCurrency(stats.expenses);
 
     const yrDisp = document.getElementById('yearlyRevenueDisplay');
     if (yrDisp) yrDisp.innerText = formatCurrency(stats.yearlyRevenue);
@@ -85,6 +98,7 @@ function renderDashboard() {
     if (yeDisp) yeDisp.innerText = formatCurrency(stats.yearlyExpenses);
 
     const list = document.getElementById('activityList');
+    if (!list) return;
     list.innerHTML = '';
     (stats.recentActivities || []).forEach(item => {
         const div = document.createElement('div');
@@ -106,7 +120,6 @@ function updateCharts() {
     const stats = state.stats;
     if (!stats.yearlyStats || stats.yearlyStats.length === 0) return;
 
-    // 1. YEARLY
     const yEl = document.getElementById('yearlyChart');
     if (yEl) {
         if (state.charts.yearly) state.charts.yearly.destroy();
@@ -123,7 +136,6 @@ function updateCharts() {
         });
     }
 
-    // 2. SIMPLIFIED MONTHLY
     const mEl = document.getElementById('monthlyChart');
     if (mEl) {
         if (state.charts.monthly) state.charts.monthly.destroy();
@@ -164,6 +176,8 @@ function renderInquiries(data = state.inquiries) {
         div.className = 'inquiry-item shadow-premium';
         div.onclick = () => handleInquiryAction(item.id);
         div.style.cursor = "pointer";
+        div.style.marginBottom = "15px";
+
         div.innerHTML = `
             <div class="item-main">
                 <span class="item-title">${item.name || "Bez imena"}</span>
@@ -193,9 +207,9 @@ function handleInquiryAction(id) {
     if (!item) return;
     state.selectedInquiry = item;
 
-    document.getElementById('detName').innerText = item.name || "-";
-    document.getElementById('detEmail').innerText = item.email || "-";
-    document.getElementById('detAmount').innerText = formatCurrency(item.amount);
+    const dn = document.getElementById('detName'); if (dn) dn.innerText = item.name || "-";
+    const de = document.getElementById('detEmail'); if (de) de.innerText = item.email || "-";
+    const da = document.getElementById('detAmount'); if (da) da.innerText = formatCurrency(item.amount);
 
     let products = [];
     try {
@@ -205,12 +219,13 @@ function handleInquiryAction(id) {
     } catch (e) { console.error("JSON Error", id); }
 
     renderProductList(products);
-    document.getElementById('btnSaveChanges').style.display = "none";
-    document.getElementById('inquiryModal').classList.add('active');
+    const saveBtn = document.getElementById('btnSaveChanges'); if (saveBtn) saveBtn.style.display = "none";
+    const modal = document.getElementById('inquiryModal'); if (modal) modal.classList.add('active');
 }
 
 function renderProductList(products) {
     const list = document.getElementById('productList');
+    if (!list) return;
     list.innerHTML = '';
     if (products.length === 0) {
         list.innerHTML = '<div class="item-meta">Nema definiranih artikla.</div>';
@@ -250,8 +265,8 @@ function updateProduct(idx, field, val) {
     item.amount = total;
     item.jsonData = JSON.stringify({ stavke: raw.stavke });
 
-    document.getElementById('detAmount').innerText = formatCurrency(total);
-    document.getElementById('btnSaveChanges').style.display = "block";
+    const da = document.getElementById('detAmount'); if (da) da.innerText = formatCurrency(total);
+    const saveBtn = document.getElementById('btnSaveChanges'); if (saveBtn) saveBtn.style.display = "block";
 }
 
 async function saveInquiryChanges() {
@@ -265,7 +280,7 @@ async function saveInquiryChanges() {
         const result = await res.json();
         if (result.status === "success") {
             alert("Spremljeno!");
-            document.getElementById('btnSaveChanges').style.display = "none";
+            const saveBtn = document.getElementById('btnSaveChanges'); if (saveBtn) saveBtn.style.display = "none";
             refreshData();
         }
     } catch (e) { alert("Greška!"); } finally { hideLoader(); }
@@ -275,10 +290,12 @@ function initModal() {
     const modal = document.getElementById('inquiryModal');
     if (!modal) return;
     document.querySelectorAll('.close-modal').forEach(b => b.onclick = () => modal.classList.remove('active'));
-    document.getElementById('btnCloseInquiry').onclick = () => modal.classList.remove('active');
-    document.getElementById('btnSaveChanges').onclick = saveInquiryChanges;
-    document.getElementById('btnSendOffer').onclick = () => runGasAction('sendOffer');
-    document.getElementById('btnSendInvoice').onclick = () => runGasAction('sendInvoice');
+
+    const closeBtn = document.getElementById('btnCloseInquiry'); if (closeBtn) closeBtn.onclick = () => modal.classList.remove('active');
+    const saveBtn = document.getElementById('btnSaveChanges'); if (saveBtn) saveBtn.onclick = saveInquiryChanges;
+
+    const offerBtn = document.getElementById('btnSendOffer'); if (offerBtn) offerBtn.onclick = () => runGasAction('sendOffer');
+    const invBtn = document.getElementById('btnSendInvoice'); if (invBtn) invBtn.onclick = () => runGasAction('sendInvoice');
 }
 
 async function runGasAction(action) {
@@ -291,6 +308,6 @@ async function runGasAction(action) {
 }
 
 function formatCurrency(v) { return new Intl.NumberFormat('hr-HR', { style: 'currency', currency: 'EUR' }).format(v || 0); }
-function showLoader(m) { const l = document.getElementById('loader'); if (l) { l.innerText = m; l.style.display = "block"; } }
+function showLoader(m) { const l = document.getElementById('loader'); if (l) { l.innerText = m; l.style.display = "block"; setTimeout(() => l.style.display = "none", 3000); } }
 function hideLoader() { const l = document.getElementById('loader'); if (l) l.style.display = "none"; }
 function initScanner() { }
