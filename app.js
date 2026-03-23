@@ -251,6 +251,10 @@ async function openCatalog() {
         const data = await res.json();
         if (data.status === 'success') {
             state.catalog = data.products;
+            if (state.catalog.length === 0) {
+                alert("Katalog je prazan! Provjeri postoji li sheet 'Proizvodi' ili 'Cjenik' u tvom Google Sheetu.");
+                return;
+            }
             renderCategories();
             renderCatalog(data.products);
             document.getElementById('catalogModal').classList.add('active');
