@@ -1,6 +1,6 @@
 /**
  * 2LMF PRO BUSINESS - FRONTEND REFRESH 🦈📊
- * Verzija: 2.9.8 (CHART EUR FIX + NAV STABILITY)
+ * Verzija: 2.9.9 (PRODUCT MODAL FIX + LABELS)
  */
 
 const GAS_URL = "https://script.google.com/macros/s/AKfycbx4TQ6cFNr8X-fNRHE0Ai571pAioDeny_mSSrTVQm3OHbTKOhfIEDiKDFM2shZ5zDFLrA/exec";
@@ -23,6 +23,9 @@ async function init() {
     const search = document.getElementById('inquirySearch');
     if (search) search.addEventListener('input', (e) => filterInquiries(e.target.value));
 
+    // Global exposure for inline onclick
+    window.handleInquiryAction = handleInquiryAction;
+
     setInterval(refreshData, 300000);
 }
 
@@ -37,7 +40,6 @@ function initNavigation() {
 }
 
 function switchTab(id) {
-    console.log("Switching to tab:", id);
     document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
 
@@ -95,7 +97,7 @@ function renderCharts() {
                 ticks: {
                     color: '#889',
                     font: { size: 10 },
-                    callback: function (value) { return value + ' €'; } // EUR na Y-osi
+                    callback: function (value) { return value + ' €'; }
                 }
             },
             x: { grid: { display: false }, ticks: { color: '#889', font: { size: 10 } } }
@@ -167,10 +169,45 @@ function handleInquiryAction(id) {
     const item = state.inquiries.find(i => String(i.id) === String(id));
     if (!item) return;
     state.selectedInquiry = item;
+
     document.getElementById('detName').innerText = item.name || "-";
     document.getElementById('detEmail').innerText = item.email || "-";
     document.getElementById('detAmount').innerText = formatCurrency(item.amount);
+
+    renderProducts(item);
+
     document.getElementById('inquiryModal').classList.add('active');
+}
+
+function renderProducts(item) {
+    const list = document.getElementById('productList');
+    if (!list) return;
+
+    let products = [];
+    try {
+        const raw = JSON.parse(item.jsonData || "{}");
+        products = raw.stavke || raw.items || raw.products || [];
+        if (Array.isArray(raw)) products = raw;
+    } catch (e) { console.error("JSON parse error", e); }
+
+    if (products.length === 0) {
+        list.innerHTML = `<div style="color:#889; font-size:0.8rem;">Nema stavki u ovoj ponudi.</div>`;
+        return;
+    }
+
+    list.innerHTML = products.map((p, idx) => `
+        <div class="p-item" style="display:flex; align-items:flex-end; gap:10px; background:rgba(255,255,255,0.04); padding:10px; border-radius:12px; margin-bottom:10px;">
+            <div class="p-name" style="flex:1; font-size:0.85rem;">${p.naziv || p.name || "Stavka"}</div>
+            <div class="p-col-group" style="display:flex; flex-direction:column; align-items:center;">
+                <span style="font-size:0.6rem; color:#889;">kol</span>
+                <input type="number" class="p-input" value="${p.kolicina || p.qty || 1}" style="width:50px; background:#000; border:1px solid var(--accent-orange); color:var(--accent-orange); text-align:center; border-radius:5px;">
+            </div>
+            <div class="p-col-group" style="display:flex; flex-direction:column; align-items:center;">
+                <span style="font-size:0.6rem; color:#889;">cijena</span>
+                <input type="number" class="p-input" value="${p.cijena || p.price || 0}" style="width:70px; background:#000; border:1px solid var(--accent-orange); color:var(--accent-orange); text-align:center; border-radius:5px;">
+            </div>
+        </div>
+    `).join('');
 }
 
 function initModal() {
