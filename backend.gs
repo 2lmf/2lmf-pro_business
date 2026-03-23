@@ -1,6 +1,6 @@
 /**
  * 2LMF PRO BUSINESS - UNIFIED BACKEND CORE 🦈💼
- * Verzija: 2.9 (YEARLY TOTALS + SIMPLIFIED MONTHLY)
+ * Verzija: 2.9.3 (DEEP SCAN + PREMIUM SCANNER SYNC)
  */
 
 var pwa_prop = PropertiesService.getScriptProperties();
@@ -32,17 +32,16 @@ function doPost(e) {
 
 function calculateAdvancedStats(ss) {
   var sheetDnevnik = ss.getSheetByName("Dnevnik knjiženja");
-  var data = sheetDnevnik ? sheetDnevnik.getDataRange().getValues().slice(1) : [];
+  // INCREASE SCAN TO 1000 rows to find more IRA/URA
+  var data = sheetDnevnik ? sheetDnevnik.getDataRange().getValues().slice(1).reverse().slice(0, 1000) : [];
   
   var today = new Date();
   var currentYear = today.getFullYear();
   var currentMonth = today.getMonth();
 
   var yearlyStats = Array.from({length: 12}, function(_, i) { return { month: i + 1, revenue: 0, expenses: 0 }; });
-  
   var totalRevenueMonth = 0;
   var totalExpensesMonth = 0;
-  
   var totalRevenueYear = 0;
   var totalExpensesYear = 0;
 
@@ -57,10 +56,10 @@ function calculateAdvancedStats(ss) {
     var d = parseDate(row[0]);
     if (!d) return;
 
-    var vrDok = String(row[1]);
     var dokument = String(row[4]);
     var konto = String(row[5]);
     
+    // Total stats (Konto 1000)
     if (konto === "1000") {
       var key = d.getTime() + "_" + dokument + "_" + duguje + "_" + potrazuje;
       if (!bankProcessed[key]) {
@@ -70,7 +69,6 @@ function calculateAdvancedStats(ss) {
           yearlyStats[d.getMonth()].expenses += potrazuje;
           totalRevenueYear += duguje;
           totalExpensesYear += potrazuje;
-          
           if (d.getMonth() === currentMonth) {
             totalRevenueMonth += duguje;
             totalExpensesMonth += potrazuje;
@@ -79,6 +77,7 @@ function calculateAdvancedStats(ss) {
       }
     }
 
+    var vrDok = String(row[1]);
     if ((vrDok === "IRA" && konto === "1200") || (vrDok === "URA" && konto === "2200")) {
       recentRaw.push({
         datum: Utilities.formatDate(d, "GMT+1", "dd.MM.yyyy"),
@@ -86,24 +85,25 @@ function calculateAdvancedStats(ss) {
         stranka: String(row[2]),
         opis: String(row[3]),
         iznos: vrDok === "IRA" ? duguje : potrazuje,
-        dok: dokument
+        dok: dokument,
+        timestamp: d.getTime()
       });
     }
   });
 
+  // Unique activities by Doc, reverse to get latest
   var activityMap = {};
-  recentRaw.forEach(function(item) { if (!activityMap[item.dok]) activityMap[item.dok] = item; });
+  recentRaw.forEach(function(item) {
+    if (!activityMap[item.dok]) activityMap[item.dok] = item;
+  });
 
-  var sheetUpiti = ss.getSheetByName("Upiti");
-  var upitiRows = sheetUpiti ? sheetUpiti.getDataRange().getValues().slice(1) : [];
-  
   return {
     revenue: totalRevenueMonth,
     expenses: totalExpensesMonth,
     yearlyRevenue: totalRevenueYear,
     yearlyExpenses: totalExpensesYear,
     yearlyStats: yearlyStats,
-    recentActivities: Object.values(activityMap).reverse().slice(0, 50) // Increased limit for scrolling
+    recentActivities: Object.values(activityMap).sort(function(a,b){ return b.timestamp - a.timestamp; }).slice(0, 60)
   };
 }
 
@@ -131,7 +131,6 @@ function handleUpdateInquiry(ss, postData) {
       return createJsonResponse({ status: "success" });
     }
   }
-  return createJsonResponse({ status: "error" });
 }
 
 function parseDate(val) {
