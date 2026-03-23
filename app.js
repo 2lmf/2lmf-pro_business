@@ -1,6 +1,6 @@
 /**
- * 2LMF PRO BUSINESS - FRONTEND CORE 🦈🚀
- * Verzija: 2.9.4 (EMAIL INTEGRATION + ORANGE SHARK)
+ * 2LMF PRO BUSINESS - FRONTEND REVERSION 🦈⏪
+ * Verzija: 2.9.5 (UI RESTORATION + SENDING FIX)
  */
 
 const GAS_URL = "https://script.google.com/macros/s/AKfycbx4TQ6cFNr8X-fNRHE0Ai571pAioDeny_mSSrTVQm3OHbTKOhfIEDiKDFM2shZ5zDFLrA/exec";
@@ -15,29 +15,40 @@ let state = {
 document.addEventListener('DOMContentLoaded', init);
 
 async function init() {
-    setupEventListeners();
+    setupTabs();
+    initModal();
     await refreshData();
+
+    // Search listener
+    const search = document.getElementById('inquirySearch');
+    if (search) search.addEventListener('input', (e) => filterInquiries(e.target.value));
+
     setInterval(refreshData, 300000);
 }
 
-function setupEventListeners() {
-    document.querySelectorAll('.nav-item').forEach(btn => {
-        btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+function setupTabs() {
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+            const tabId = item.dataset.tab;
+            switchTab(tabId);
+        });
     });
+}
 
-    document.getElementById('searchInput').addEventListener('input', (e) => {
-        filterInquiries(e.target.value);
-    });
+function switchTab(id) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
 
-    document.getElementById('closeModal').addEventListener('click', hideModal);
+    const target = document.getElementById(`tab-${id}`);
+    if (target) target.classList.add('active');
 
-    // NEW: Handle Send Buttons inside Modal
-    document.getElementById('btnSendOffer').addEventListener('click', () => handleInquiryAction('sendOffer'));
-    document.getElementById('btnSendInvoice').addEventListener('click', () => handleInquiryAction('sendInvoice'));
+    const nav = document.querySelector(`[data-tab="${id}"]`);
+    if (nav) nav.classList.add('active');
 }
 
 async function refreshData() {
-    showLoading();
+    showLoader("Sinkronizacija...");
     try {
         const res = await fetch(`${GAS_URL}?action=get_dashboard_data`);
         const data = await res.json();
@@ -46,178 +57,202 @@ async function refreshData() {
             state.stats = data.stats;
             renderAll();
         }
-    } catch (err) { console.error("Refresh Error:", err); }
-    hideLoading();
+    } catch (err) { console.error("Error:", err); }
+    hideLoader();
 }
 
 function renderAll() {
     renderStats();
     renderCharts();
-    renderInquiries(state.inquiries);
     renderActivities();
+    renderInquiries();
 }
 
 function renderStats() {
-    document.getElementById('monthlyRevenue').textContent = formatEuro(state.stats.revenue);
-    document.getElementById('monthlyExpenses').textContent = formatEuro(state.stats.expenses);
-    document.getElementById('yearlyRevenue').textContent = formatEuro(state.stats.yearlyRevenue);
-    document.getElementById('yearlyExpenses').textContent = formatEuro(state.stats.yearlyExpenses);
-}
-
-function renderInquiries(list) {
-    const container = document.getElementById('inquiriesList');
-    container.innerHTML = list.map(inq => `
-        <div class="inquiry-card glass-card" onclick="showInquiryDetails('${inq.id}')">
-            <div class="inquiry-header">
-                <span class="inquiry-id">#${inq.id.split('-')[0]}</span>
-                <span class="status-pill status-${inq.status.toLowerCase().replace(' ', '-')}">${inq.status}</span>
-            </div>
-            <div class="inquiry-body">
-                <h3>${inq.name}</h3>
-                <p>${inq.subject}</p>
-            </div>
-            <div class="inquiry-footer">
-                <span class="inquiry-date">${inq.date}</span>
-                <span class="inquiry-amount">${formatEuro(inq.amount)}</span>
-            </div>
-        </div>
-    `).join('');
+    document.getElementById('monthlyRevenue').textContent = formatCurrency(state.stats.revenue);
+    document.getElementById('monthlyExpenses').textContent = formatCurrency(state.stats.expenses);
+    document.getElementById('yearlyRevenueDisplay').textContent = formatCurrency(state.stats.yearlyRevenue);
+    document.getElementById('yearlyExpensesDisplay').textContent = formatCurrency(state.stats.yearlyExpenses);
 }
 
 function renderActivities() {
-    const container = document.getElementById('activitiesList');
-    container.innerHTML = state.stats.recentActivities.map(act => `
+    const list = document.getElementById('activityList');
+    if (!list) return;
+    list.innerHTML = state.stats.recentActivities.map(act => `
         <div class="activity-item">
-            <div class="activity-icon ${act.vrsta.toLowerCase()}">
-                <i class="fas ${act.vrsta === 'IRA' ? 'fa-arrow-up' : 'fa-arrow-down'}"></i>
+            <div class="item-main">
+                <span class="item-title">${act.stranka}</span>
+                <span class="item-meta">${act.opis} (${act.datum})</span>
             </div>
-            <div class="activity-info">
-                <h4>${act.stranka}</h4>
-                <p>${act.opis} (${act.datum})</p>
+            <div class="item-action">
+                <span class="${act.vrsta.toLowerCase()}-amount">${act.vrsta === 'IRA' ? '+' : '-'}${formatCurrency(act.iznos)}</span>
             </div>
-            <div class="activity-amount ${act.vrsta.toLowerCase()}">${act.vrsta === 'IRA' ? '+' : '-'}${formatEuro(act.iznos)}</div>
         </div>
     `).join('');
 }
 
-function showInquiryDetails(id) {
-    const inq = state.inquiries.find(i => i.id === id);
-    if (!inq) return;
-    state.selectedInquiry = inq;
-
-    const details = document.getElementById('inquiryDetails');
-    let items = [];
-    try {
-        const raw = JSON.parse(inq.jsonData);
-        items = raw.stavke || raw.items || [];
-        if (Array.isArray(raw) && raw.length > 0) items = raw;
-    } catch (e) { }
-
-    const itemsHtml = items.map(item => `
-        <div class="item-row">
-            <span class="item-name">${item.naziv || 'Artikl'}</span>
-            <div class="item-vals">
-                <div class="val-group">
-                   <label>kol</label>
-                   <input type="number" value="${item.kolicina || 1}" class="item-qty">
-                </div>
-                <div class="val-group">
-                   <label>cijena</label>
-                   <input type="number" value="${item.cijena || 0}" class="item-price">
-                </div>
+function renderInquiries(data = state.inquiries) {
+    const list = document.getElementById('inquiryList');
+    if (!list) return;
+    list.innerHTML = data.map(item => `
+        <div class="inquiry-item shadow-premium" onclick="handleInquiryAction('${item.id}')" style="cursor:pointer; margin-bottom:12px;">
+            <div class="item-main">
+                <span class="item-title">${item.name || "Bez imena"}</span>
+                <span class="item-meta">${item.id.split('-')[0]} • ${item.subject}</span>
+                <span class="item-meta">Status: <b style="color:var(--accent-orange)">${item.status}</b></span>
+            </div>
+            <div class="item-action" style="display:flex; flex-direction:column; align-items:flex-end; justify-content:center;">
+                <b style="color:#fff;">${formatCurrency(item.amount)}</b>
+                <button class="btn-pill-small" style="margin-top:5px;">DETALJI</button>
             </div>
         </div>
     `).join('');
-
-    details.innerHTML = `
-        <div class="modal-header-info">
-            <h2>${inq.name}</h2>
-            <p>${inq.email}</p>
-            <p class="subject-line">Predmet: ${inq.subject}</p>
-        </div>
-        <div class="items-list">${itemsHtml}</div>
-        <div class="modal-total">Ukupno: ${formatEuro(inq.amount)}</div>
-    `;
-
-    document.getElementById('inquiryModal').classList.add('active');
-}
-
-async function handleInquiryAction(action) {
-    if (!state.selectedInquiry) return;
-    showLoading();
-    try {
-        const res = await fetch(GAS_URL, {
-            method: 'POST',
-            body: JSON.stringify({
-                action: action,
-                id: state.selectedInquiry.id
-            })
-        });
-        const data = await res.json();
-        if (data.status === 'success') {
-            alert("✅ Uspješno poslano!");
-            hideModal();
-            refreshData();
-        } else {
-            alert("❌ Greška pri slanju.");
-        }
-    } catch (err) { alert("Greška: " + err); }
-    hideLoading();
 }
 
 function renderCharts() {
-    const ctxY = document.getElementById('yearlyChart').getContext('2d');
-    const ctxM = document.getElementById('monthlyChart').getContext('2d');
+    const stats = state.stats;
+    const ctxY = document.getElementById('yearlyChart');
+    const ctxM = document.getElementById('monthlyChart');
 
     if (state.charts.yearly) state.charts.yearly.destroy();
     if (state.charts.monthly) state.charts.monthly.destroy();
 
-    state.charts.yearly = new Chart(ctxY, {
-        type: 'line',
+    state.charts.yearly = new Chart(ctxY.getContext('2d'), {
+        type: 'bar',
         data: {
             labels: ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'],
             datasets: [
-                { label: 'Prihodi', data: state.stats.yearlyStats.map(s => s.revenue), borderColor: '#00f2fe', tension: 0.4, fill: true, backgroundColor: 'rgba(0, 242, 254, 0.1)' },
-                { label: 'Rashodi', data: state.stats.yearlyStats.map(s => s.expenses), borderColor: '#f5af19', tension: 0.4 }
+                { label: 'Prihodi', data: stats.yearlyStats.map(m => m.revenue), backgroundColor: 'rgba(46, 204, 113, 0.9)', borderRadius: 4 },
+                { label: 'Rashodi', data: stats.yearlyStats.map(m => m.expenses), backgroundColor: 'rgba(0, 242, 255, 0.9)', borderRadius: 4 }
             ]
         },
         options: chartOptions
     });
 
-    state.charts.monthly = new Chart(ctxM, {
+    state.charts.monthly = new Chart(ctxM.getContext('2d'), {
         type: 'bar',
         data: {
             labels: ['Prihodi', 'Rashodi'],
             datasets: [{
-                data: [state.stats.revenue, state.stats.expenses],
-                backgroundColor: ['#00f2fe', '#f5af19']
+                data: [stats.revenue, stats.expenses],
+                backgroundColor: ['rgba(46, 204, 113, 1)', 'rgba(0, 242, 255, 1)'],
+                borderRadius: 10
             }]
         },
-        options: chartOptions
+        options: { ...chartOptions, plugins: { legend: { display: false } } }
     });
 }
 
 const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: { legend: { display: false } },
-    scales: { y: { display: false }, x: { grid: { display: false }, ticks: { color: 'rgba(255,255,255,0.5)' } } }
+    responsive: true, maintainAspectRatio: false,
+    scales: {
+        y: { display: false },
+        x: { grid: { display: false }, ticks: { color: '#889', font: { size: 10 } } }
+    },
+    plugins: { legend: { display: false } }
 };
 
-function switchTab(tabId) {
-    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    document.getElementById(`tab-${tabId}`).classList.add('active');
-    document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
+function handleInquiryAction(id) {
+    const item = state.inquiries.find(i => String(i.id) === String(id));
+    if (!item) return;
+    state.selectedInquiry = item;
+
+    document.getElementById('detName').innerText = item.name || "-";
+    document.getElementById('detEmail').innerText = item.email || "-";
+    document.getElementById('detAmount').innerText = formatCurrency(item.amount);
+
+    let products = [];
+    try {
+        const raw = JSON.parse(item.jsonData || "{}");
+        products = raw.stavke || raw.items || [];
+        if (Array.isArray(raw) && raw.length > 0) products = raw;
+    } catch (e) { }
+
+    renderProductList(products);
+    document.getElementById('btnSaveChanges').style.display = "none";
+    document.getElementById('inquiryModal').classList.add('active');
+}
+
+function renderProductList(products) {
+    const list = document.getElementById('productList');
+    list.innerHTML = products.map((p, idx) => `
+        <div class="p-item">
+            <div class="p-name">${p.naziv || p.name || "Artikl"}</div>
+            <div class="p-col-group">
+                <span class="p-small-label">kol</span>
+                <input type="number" class="p-input" value="${p.kolicina || 0}" onchange="updateLocalProduct(${idx}, 'qty', this.value)">
+            </div>
+            <div class="p-col-group">
+                <span class="p-small-label">cij</span>
+                <input type="number" class="p-input" value="${p.cijena || 0}" onchange="updateLocalProduct(${idx}, 'price', this.value)">
+            </div>
+        </div>
+    `).join('');
+}
+
+function updateLocalProduct(idx, field, val) {
+    const item = state.selectedInquiry;
+    let raw = JSON.parse(item.jsonData || '{"stavke":[]}');
+    let items = raw.stavke || raw.items || [];
+
+    if (field === 'qty') items[idx].kolicina = parseFloat(val) || 0;
+    if (field === 'price') items[idx].cijena = parseFloat(val) || 0;
+
+    item.amount = items.reduce((sum, p) => sum + (p.kolicina * p.cijena), 0);
+    item.jsonData = JSON.stringify({ stavke: items });
+
+    document.getElementById('detAmount').innerText = formatCurrency(item.amount);
+    document.getElementById('btnSaveChanges').style.display = "block";
+}
+
+async function saveInquiryChanges() {
+    const item = state.selectedInquiry;
+    showLoader("Spremanje...");
+    try {
+        await fetch(GAS_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: "updateInquiry", id: item.id, amount: item.amount, jsonData: JSON.parse(item.jsonData) })
+        });
+        alert("Spremljeno!");
+        document.getElementById('btnSaveChanges').style.display = "none";
+        refreshData();
+    } catch (e) { alert("Greška!"); }
+    hideLoader();
+}
+
+function initModal() {
+    const modal = document.getElementById('inquiryModal');
+    document.querySelectorAll('.close-modal').forEach(b => b.onclick = () => modal.classList.remove('active'));
+    document.getElementById('btnCloseInquiry').onclick = () => modal.classList.remove('active');
+    document.getElementById('btnSaveChanges').onclick = saveInquiryChanges;
+
+    document.getElementById('btnSendOffer').onclick = () => runGasAction('sendOffer');
+    document.getElementById('btnSendInvoice').onclick = () => runGasAction('sendInvoice');
+}
+
+async function runGasAction(action) {
+    const id = state.selectedInquiry.id;
+    showLoader("Slanje...");
+    try {
+        const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action, id }) });
+        const data = await res.json();
+        if (data.status === "success") {
+            alert("Poslano uspješno!");
+            document.getElementById('inquiryModal').classList.remove('active');
+            refreshData();
+        } else {
+            alert("Greška pri slanju.");
+        }
+    } catch (e) { alert("Greška!"); }
+    hideLoader();
 }
 
 function filterInquiries(query) {
     const q = query.toLowerCase();
-    const filtered = state.inquiries.filter(i => i.name.toLowerCase().includes(q) || i.subject.toLowerCase().includes(q));
+    const filtered = state.inquiries.filter(i => (i.name || "").toLowerCase().includes(q) || (i.subject || "").toLowerCase().includes(q));
     renderInquiries(filtered);
 }
 
-function hideModal() { document.getElementById('inquiryModal').classList.remove('active'); }
-function showLoading() { document.getElementById('loader').classList.add('active'); }
-function hideLoading() { document.getElementById('loader').classList.remove('active'); }
-function formatEuro(val) { return new Intl.NumberFormat('hr-HR', { style: 'currency', currency: 'EUR' }).format(val); }
+function formatCurrency(v) { return new Intl.NumberFormat('hr-HR', { style: 'currency', currency: 'EUR' }).format(v || 0); }
+function showLoader(m) { const l = document.getElementById('loader'); if (l) { l.innerText = m; l.style.display = "block"; } }
+function hideLoader() { const l = document.getElementById('loader'); if (l) l.style.display = "none"; }
