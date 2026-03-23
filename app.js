@@ -1,6 +1,6 @@
 /**
  * 2LMF PRO BUSINESS - FRONTEND CORE 🦈🚀
- * Verzija: 2.9 (YEARLY TOTALS + SIMPLIFIED CHART + PILL ALIGN)
+ * Verzija: 2.9.1 (DASHBOARD SCROLL + NEW OFFER BUTTON FIX)
  */
 
 const GAS_URL = "https://script.google.com/macros/s/AKfycbx4TQ6cFNr8X-fNRHE0Ai571pAioDeny_mSSrTVQm3OHbTKOhfIEDiKDFM2shZ5zDFLrA/exec";
@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initNavigation();
     initScanner();
     initModal();
+    initSpecialButtons(); // Added for "New Offer"
     refreshData();
 });
 
@@ -32,6 +33,15 @@ function initNavigation() {
     if (search) search.addEventListener('input', (e) => filterInquiries(e.target.value));
 }
 
+function initSpecialButtons() {
+    const btnNew = document.getElementById('btnNewInquiry');
+    if (btnNew) {
+        btnNew.onclick = () => {
+            alert("Sustav za slaganje nove ponude iz kataloga (v3.0) je u planu za sutra! Karlo, pročitaj moj komentar. 🦈");
+        };
+    }
+}
+
 function switchTab(tabId) {
     document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
     const navItem = document.querySelector(`[data-tab="${tabId}"]`);
@@ -41,12 +51,14 @@ function switchTab(tabId) {
     const targetTab = document.getElementById(`tab-${tabId}`);
     if (targetTab) targetTab.classList.add('active');
 
-    if (tabId === 'dashboard') setTimeout(updateCharts, 400);
+    if (tabId === 'dashboard') {
+        setTimeout(updateCharts, 400);
+    }
 }
 
 // --- DATA SYNC ---
 async function refreshData() {
-    showLoader("Učitavanje v2.9...");
+    showLoader("Učitavanje v2.9.1...");
     try {
         const response = await fetch(`${GAS_URL}?action=get_dashboard_data&cb=${Date.now()}`);
         const result = await response.json();
@@ -66,7 +78,6 @@ function renderDashboard() {
     document.getElementById('monthlyRevenue').innerText = formatCurrency(stats.revenue);
     document.getElementById('monthlyExpenses').innerText = formatCurrency(stats.expenses);
 
-    // NEW YEARLY CARDS
     const yrDisp = document.getElementById('yearlyRevenueDisplay');
     if (yrDisp) yrDisp.innerText = formatCurrency(stats.yearlyRevenue);
 
@@ -95,7 +106,7 @@ function updateCharts() {
     const stats = state.stats;
     if (!stats.yearlyStats || stats.yearlyStats.length === 0) return;
 
-    // 1. YEARLY LINE/BAR
+    // 1. YEARLY
     const yEl = document.getElementById('yearlyChart');
     if (yEl) {
         if (state.charts.yearly) state.charts.yearly.destroy();
@@ -112,7 +123,7 @@ function updateCharts() {
         });
     }
 
-    // 2. SIMPLIFIED MONTHLY (2 Bars)
+    // 2. SIMPLIFIED MONTHLY
     const mEl = document.getElementById('monthlyChart');
     if (mEl) {
         if (state.charts.monthly) state.charts.monthly.destroy();
@@ -153,7 +164,6 @@ function renderInquiries(data = state.inquiries) {
         div.className = 'inquiry-item shadow-premium';
         div.onclick = () => handleInquiryAction(item.id);
         div.style.cursor = "pointer";
-
         div.innerHTML = `
             <div class="item-main">
                 <span class="item-title">${item.name || "Bez imena"}</span>

@@ -85,70 +85,63 @@
                     </div>
                 </div>
 
-                <div class="section-header">
-                    <h3>ZADNJE AKTIVNOSTI</h3>
-                    <button class="text-btn">VIDI SVE</button>
-                </div>
+                <div class="loading-shimmer"></div>
+    </div>
+    </section>
 
-                <div id="activityList" class="activity-list">
-                    <!-- Dynamic Items -->
-                    <div class="loading-shimmer"></div>
-                </div>
-            </section>
+    <!-- TAB: Inquiries -->
+    <section id="tab-inquiries" class="tab-content">
+        <div class="action-header" style="margin-bottom: 20px;">
+            <button class="btn-primary" style="width: 100%; justify-content: center; margin-bottom: 15px;">
+                <i class="fas fa-plus-circle"></i> NOVI UPIT / PONUDA
+            </button>
+            <div class="premium-search">
+                <i class="fas fa-search"></i>
+                <input type="text" id="inquirySearch" placeholder="Traži kupca, broj ili predmet...">
+            </div>
+        </div>
+        <div id="inquiryList" class="list-container">
+            <!-- Inquiries will be rendered here -->
+        </div>
+    </section>
 
-            <!-- TAB: Inquiries -->
-            <section id="tab-inquiries" class="tab-content">
-                <div class="action-header" style="margin-bottom: 20px;">
-                    <button class="btn-primary" style="width: 100%; justify-content: center; margin-bottom: 15px;">
-                        <i class="fas fa-plus-circle"></i> NOVI UPIT / PONUDA
-                    </button>
-                    <div class="premium-search">
-                        <i class="fas fa-search"></i>
-                        <input type="text" id="inquirySearch" placeholder="Traži kupca, broj ili predmet...">
-                    </div>
-                </div>
-                <div id="inquiryList" class="list-container">
-                    <!-- Inquiries will be rendered here -->
-                </div>
-            </section>
+    <!-- TAB: Receipts (Scanner) -->
+    <section id="tab-receipts" class="tab-content">
+        <div class="scanner-hero glass-card">
+            <i class="fas fa-receipt hero-icon"></i>
+            <h2>Shark Receipt 🤖</h2>
+            <p>Slikaj račun i AI će ga sam proknjižiti u tvoj Dnevnik.</p>
 
-            <!-- TAB: Receipts (Scanner) -->
-            <section id="tab-receipts" class="tab-content">
-                <div class="scanner-hero glass-card">
-                    <i class="fas fa-receipt hero-icon"></i>
-                    <h2>Shark Receipt 🤖</h2>
-                    <p>Slikaj račun i AI će ga sam proknjižiti u tvoj Dnevnik.</p>
+            <label for="fileInput" class="btn-primary">
+                <i class="fas fa-camera"></i> SKENIRAJ RAČUN
+                <input type="file" id="fileInput" accept="image/*" capture="environment" style="display:none;">
+            </label>
+        </div>
 
-                    <label for="fileInput" class="btn-primary">
-                        <i class="fas fa-camera"></i> SKENIRAJ RAČUN
-                        <input type="file" id="fileInput" accept="image/*" capture="environment" style="display:none;">
-                    </label>
-                </div>
+        <div class="section-header">
+            <h3>ULAZNI RAČUNI (URA)</h3>
+        </div>
+        <div id="receiptHistory" class="history-list">
+            <!-- Receipts from history -->
+        </div>
+    </section>
+    </main>
 
-                <div class="section-header">
-                    <h3>ULAZNI RAČUNI (URA)</h3>
-                </div>
-                <div id="receiptHistory" class="history-list">
-                    <!-- Receipts from history -->
-                </div>
-            </section>
-        </main>
-
-        <!-- Navigation Bar (Mobile Bottom) -->
-        <nav class="app-nav">
-            <a href="#" class="nav-item active" data-tab="dashboard">
-                <i class="fas fa-chart-line"></i>
-                <span>Status</span>
-            </a>
-            <a href="#" class="nav-item" data-tab="inquiries">
-                <i class="fas fa-file-invoice"></i>
-                <span>Ponude</span>
-            </a>
-            <a href="#" class="nav-item" data-tab="receipts">
-                <i class="fas fa-receipt"></i>
-                <span>Troškovi</span>
-            </a>
-        </nav>
+    <!-- Navigation Bar (Mobile Bottom) -->
+    <nav class="app-nav">
+        <a href="#" class="nav-item active" data-tab="dashboard">
+            <i class="fas fa-chart-line"></i>
+            <span>Status</span>
+        </a>
+        <a href="#" class="nav-item" data-tab="inquiries">
+            <i class="fas fa-file-invoice"></i>
+            <span>Ponude</span>
+        </a>
+        <a href="#" class="nav-item" data-tab="receipts">
+            <i class="fas fa-receipt"></i>
+            <span>Troškovi</span>
+        </a>
+    </nav>
     </div>
 
     <!-- Modal: Inquiry Details -->
