@@ -1,7 +1,7 @@
 /* 
-   2LMF PRO HUB - PREMIUM DARK MODE UI 
+   2LMF PRO BUSINESS - PREMIUM DARK MODE UI 
    Aesthetic: Glassmorphism, Deep Dark, Vibrant Accents (Orange/Cyan)
-   Version: 2.9.3 (CENTERED SCANNER + ACTIVITY FIX)
+   Version: 2.9.8 (NAV RESTORATION + CHART EUR FIX)
 */
 
 :root {
@@ -31,8 +31,9 @@ body {
     font-family: 'Inter', sans-serif;
     line-height: 1.5;
     overflow: hidden;
-    width: 100vw;
-    height: 100vh;
+    position: fixed;
+    width: 100%;
+    height: 100%;
 }
 
 .app-container {
@@ -70,6 +71,15 @@ body {
     font-size: 0.6rem;
     color: var(--text-secondary);
     margin-left: 5px;
+}
+
+.icon-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 8px;
 }
 
 /* --- MAIN --- */
@@ -128,7 +138,7 @@ body {
     height: 100%;
 }
 
-/* --- PILL BUTTONS --- */
+/* --- BUTTONS --- */
 .btn-primary,
 .btn-cyan,
 .btn-success,
@@ -149,21 +159,6 @@ body {
     gap: 8px;
     padding: 12px 25px;
     font-size: 0.8rem;
-}
-
-.btn-cyan {
-    border-color: var(--accent-cyan) !important;
-    color: var(--accent-cyan) !important;
-}
-
-.btn-success {
-    border-color: var(--success) !important;
-    color: var(--success) !important;
-}
-
-.btn-secondary {
-    border-color: var(--text-secondary) !important;
-    color: var(--text-secondary) !important;
 }
 
 /* --- DASHBOARD --- */
@@ -189,7 +184,7 @@ body {
     text-transform: uppercase;
 }
 
-/* --- ACTIVITY CARD (SCROLLABLE v2.9.3) --- */
+/* --- ACTIVITY CARD --- */
 .activity-card {
     max-height: 600px;
     overflow-y: auto;
@@ -197,21 +192,11 @@ body {
     border: 1px solid var(--accent-orange);
 }
 
-.activity-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-/* --- SCANNER HERO (CENTERED v2.9.3) --- */
+/* --- SCANNER --- */
 .scanner-hero {
     text-align: center;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 250px;
-    border: 1px dashed var(--accent-orange);
+    padding: 40px 20px;
+    border: 1px dashed var(--accent-orange) !important;
     background: rgba(230, 126, 34, 0.05);
 }
 
@@ -219,96 +204,46 @@ body {
     font-size: 3.5rem;
     color: var(--accent-orange);
     margin-bottom: 20px;
-    filter: drop-shadow(0 0 10px var(--accent-orange));
 }
 
-.scanner-hero h2 {
-    font-family: 'Orbitron', sans-serif;
-    margin-bottom: 10px;
-    letter-spacing: 1px;
-}
-
-.scanner-hero p {
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-    margin-bottom: 25px;
-    max-width: 80%;
-}
-
-/* --- MODAL --- */
-.modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.9);
-    z-index: 2000;
+/* --- NAVIGATION BAR (RESTORED CLASSIC) --- */
+.app-nav {
+    height: var(--nav-height);
+    background: rgba(2, 2, 5, 0.95);
+    backdrop-filter: blur(25px);
+    border-top: 1px solid var(--glass-border);
     display: flex;
+    justify-content: space-around;
     align-items: center;
-    justify-content: center;
-    padding: 20px;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s;
-}
-
-.modal.active {
-    opacity: 1;
-    pointer-events: auto;
-}
-
-.modal-content {
+    position: fixed;
+    bottom: 0;
     width: 100%;
-    max-width: 450px;
-    overflow-y: auto;
-    max-height: 90vh;
-    background: #050508;
-    border: 1px solid var(--glass-border);
-    border-radius: 28px;
-    padding: 25px;
+    max-width: 500px;
+    /* Aligned with container */
+    z-index: 1000;
+    padding-bottom: env(safe-area-inset-bottom);
 }
 
-.p-item {
-    display: flex;
-    align-items: flex-end;
-    gap: 10px;
-    background: rgba(255, 255, 255, 0.06);
-    padding: 12px;
-    border-radius: 12px;
-    margin-bottom: 8px;
-}
-
-.p-name {
-    flex: 1;
-    font-size: 0.85rem;
-    font-weight: 600;
-}
-
-.p-col-group {
+.nav-item {
+    text-decoration: none;
     display: flex;
     flex-direction: column;
     align-items: center;
+    color: var(--text-secondary);
+    transition: all 0.3s ease;
+    font-size: 0.7rem;
     gap: 4px;
 }
 
-.p-small-label {
-    font-size: 0.6rem;
-    color: var(--text-secondary);
-    text-transform: lowercase;
-}
-
-.p-input {
-    background: #000;
-    border: 1.5px solid var(--accent-orange);
+.nav-item.active {
     color: var(--accent-orange);
-    padding: 5px;
-    border-radius: 8px;
-    text-align: center;
-    font-weight: 800;
-    width: 60px;
 }
 
+.nav-item i {
+    font-size: 1.3rem;
+}
+
+/* --- SEARCH & MODAL --- */
 .premium-search {
     position: relative;
     width: 100%;
