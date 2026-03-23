@@ -416,9 +416,15 @@ function openCheckout() {
         return `
             <div class="p-item" style="display:flex; align-items:flex-end; gap:10px; background:rgba(255,255,255,0.04); padding:10px; border-radius:12px; margin-bottom:10px;">
                 <div class="p-name" style="flex:1; font-size:0.8rem;">${item.name}</div>
-                <div style="display:flex; gap:5px;">
-                    <input type="number" value="${item.qty}" onchange="updateCartItemQty('${item.sku}', this.value)" style="width:40px; background:#000; border:1px solid var(--accent-orange); color:#fff; text-align:center; border-radius:5px;">
-                    <input type="number" value="${parseFloat(item.price).toFixed(2)}" onchange="updateCartItemPrice('${item.sku}', this.value)" style="width:60px; background:#000; border:1px solid var(--accent-orange); color:#fff; text-align:center; border-radius:5px;">
+                <div style="display:flex; gap:10px;">
+                    <div style="display:flex; flex-direction:column; align-items:center;">
+                        <span style="font-size:0.6rem; color:#889;">kol</span>
+                        <input type="number" value="${item.qty}" onchange="updateCartItemQty('${item.sku}', this.value)" style="width:40px; background:#000; border:1px solid var(--accent-orange); color:#fff; text-align:center; border-radius:5px;">
+                    </div>
+                    <div style="display:flex; flex-direction:column; align-items:center;">
+                        <span style="font-size:0.6rem; color:#889;">cijena</span>
+                        <input type="number" value="${parseFloat(item.price).toFixed(2)}" onchange="updateCartItemPrice('${item.sku}', this.value)" style="width:60px; background:#000; border:1px solid var(--accent-orange); color:#fff; text-align:center; border-radius:5px;">
+                    </div>
                 </div>
             </div>
         `;
