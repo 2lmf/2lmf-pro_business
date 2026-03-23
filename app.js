@@ -9,7 +9,9 @@ let state = {
     inquiries: [],
     stats: { revenue: 0, expenses: 0, yearlyRevenue: 0, yearlyExpenses: 0, yearlyStats: [], recentActivities: [] },
     selectedInquiry: null,
-    charts: { yearly: null, monthly: null }
+    charts: { yearly: null, monthly: null },
+    catalog: [],
+    cart: []
 };
 
 document.addEventListener('DOMContentLoaded', init);
@@ -18,6 +20,7 @@ async function init() {
     initNavigation();
     initModal();
     initScanner();
+    initCatalog();
     await refreshData();
 
     const search = document.getElementById('inquirySearch');
@@ -220,6 +223,174 @@ function initModal() {
 function initScanner() {
     const fileInput = document.getElementById('fileInput');
     if (fileInput) fileInput.onchange = () => alert("Skeniranje u obradi...");
+}
+
+function initCatalog() {
+    const btnNew = document.getElementById('btnNewInquiry');
+    if (btnNew) btnNew.onclick = openCatalog;
+
+    const btnClose = document.getElementById('btnCloseCatalog');
+    if (btnClose) btnClose.onclick = () => document.getElementById('catalogModal').classList.remove('active');
+
+    const search = document.getElementById('catalogSearch');
+    if (search) search.oninput = (e) => {
+        const q = e.target.value.toLowerCase();
+        const filtered = state.catalog.filter(p => p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q));
+        renderCatalog(filtered);
+    };
+
+    document.getElementById('btnViewCart').onclick = openCheckout;
+    document.getElementById('btnCloseCheckout').onclick = () => document.getElementById('checkoutModal').classList.remove('active');
+    document.getElementById('btnSubmitOffer').onclick = submitOffer;
+}
+
+async function openCatalog() {
+    showLoader("Učitavanje kataloga...");
+    try {
+        const res = await fetch(`${GAS_URL}?action=get_products`);
+        const data = await res.json();
+        if (data.status === 'success') {
+            state.catalog = data.products;
+            renderCategories();
+            renderCatalog(data.products);
+            document.getElementById('catalogModal').classList.add('active');
+        }
+    } catch (e) { alert("Greška pri učitavanju kataloga"); }
+    hideLoader();
+}
+
+function renderCategories() {
+    const cats = [...new Set(state.catalog.map(p => p.category))];
+    const container = document.getElementById('categoryFilters');
+    container.innerHTML = `<div class="pill active" onclick="renderCatalog(state.catalog); document.querySelectorAll('.pill').forEach(p=>p.classList.remove('active')); this.classList.add('active');">Sve</div>`;
+    cats.forEach(c => {
+        if (!c) return;
+        const div = document.createElement('div');
+        div.className = 'pill';
+        div.innerText = c;
+        div.onclick = () => {
+            const filtered = state.catalog.filter(p => p.category === c);
+            renderCatalog(filtered);
+            document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+            div.classList.add('active');
+        };
+        container.appendChild(div);
+    });
+}
+
+function renderCatalog(items) {
+    const list = document.getElementById('catalogList');
+    list.innerHTML = items.map(p => {
+        const cartItem = state.cart.find(c => c.sku === p.sku);
+        const qty = cartItem ? cartItem.qty : 0;
+        return `
+            <div class="catalog-card shadow-premium">
+                <div class="p-name">${p.name}</div>
+                <div class="p-meta">SKU: ${p.sku} | Jedinica: ${p.unit}</div>
+                <div class="p-actions">
+                    <div class="p-price">${formatCurrency(p.price)}</div>
+                    <div class="qty-control">
+                        <button class="qty-btn" onclick="updateCart('${p.sku}', -1)">-</button>
+                        <span style="font-weight:700; width:20px; text-align:center;">${qty}</span>
+                        <button class="qty-btn" onclick="updateCart('${p.sku}', 1)">+</button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+window.updateCart = function (sku, delta) {
+    const prod = state.catalog.find(p => p.sku === sku);
+    if (!prod) return;
+
+    let cartItem = state.cart.find(c => c.sku === sku);
+    if (!cartItem) {
+        if (delta > 0) state.cart.push({ ...prod, qty: 1 });
+    } else {
+        cartItem.qty += delta;
+        if (cartItem.qty <= 0) state.cart = state.cart.filter(c => c.sku !== sku);
+    }
+
+    updateCartUI();
+    renderCatalog(state.catalog); // Osvježi brojeve na karticama
+};
+
+function updateCartUI() {
+    const count = state.cart.reduce((acc, current) => acc + current.qty, 0);
+    document.getElementById('cartCount').innerText = count;
+}
+
+function openCheckout() {
+    if (state.cart.length === 0) return alert("Košarica je prazna!");
+
+    const list = document.getElementById('checkoutList');
+    let total = 0;
+    list.innerHTML = state.cart.map(item => {
+        const lineTotal = item.price * item.qty;
+        total += lineTotal;
+        return `
+            <div class="p-item" style="display:flex; align-items:flex-end; gap:10px; background:rgba(255,255,255,0.04); padding:10px; border-radius:12px; margin-bottom:10px;">
+                <div class="p-name" style="flex:1; font-size:0.8rem;">${item.name}</div>
+                <div style="display:flex; gap:5px;">
+                    <input type="number" value="${item.qty}" onchange="updateCartItemQty('${item.sku}', this.value)" style="width:40px; background:#000; border:1px solid var(--accent-orange); color:#fff; text-align:center; border-radius:5px;">
+                    <input type="number" value="${item.price}" onchange="updateCartItemPrice('${item.sku}', this.value)" style="width:60px; background:#000; border:1px solid var(--accent-orange); color:#fff; text-align:center; border-radius:5px;">
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    document.getElementById('chkTotal').innerText = formatCurrency(total);
+    document.getElementById('checkoutModal').classList.add('active');
+}
+
+window.updateCartItemQty = (sku, val) => {
+    const item = state.cart.find(c => c.sku === sku);
+    if (item) item.qty = parseFloat(val) || 0;
+    recalcCheckoutTotal();
+};
+
+window.updateCartItemPrice = (sku, val) => {
+    const item = state.cart.find(c => c.sku === sku);
+    if (item) item.price = parseFloat(val) || 0;
+    recalcCheckoutTotal();
+};
+
+function recalcCheckoutTotal() {
+    const total = state.cart.reduce((acc, curr) => acc + (curr.price * curr.qty), 0);
+    document.getElementById('chkTotal').innerText = formatCurrency(total);
+}
+
+async function submitOffer() {
+    const name = document.getElementById('chkName').value;
+    const email = document.getElementById('chkEmail').value;
+    const subject = document.getElementById('chkSubject').value;
+
+    if (!name || !email) return alert("Ime i Email su obavezni!");
+
+    showLoader("Kreiranje ponude...");
+    try {
+        const res = await fetch(GAS_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'createInquiry',
+                name: name,
+                email: email,
+                subject: subject || "Nova ponuda iz aplikacije",
+                items: state.cart.map(i => ({ sku: i.sku, naziv: i.name, kolicina: i.qty, cijena: i.price }))
+            })
+        });
+        const data = await res.json();
+        if (data.status === 'success') {
+            alert("Ponuda uspješno kreirana i poslana! (ID: " + data.id + ")");
+            state.cart = [];
+            updateCartUI();
+            document.getElementById('checkoutModal').classList.remove('active');
+            document.getElementById('catalogModal').classList.remove('active');
+            refreshData();
+        }
+    } catch (e) { alert("Greška pri slanju ponude."); }
+    hideLoader();
 }
 
 function formatCurrency(v) { return new Intl.NumberFormat('hr-HR', { style: 'currency', currency: 'EUR' }).format(v || 0); }

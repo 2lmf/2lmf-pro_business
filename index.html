@@ -26,7 +26,7 @@
         <header class="app-header">
             <div class="logo-box">
                 <span class="logo-text"><span class="accent-o">2LMF</span> PRO <span class="accent-o">BUSINESS</span>
-                    <small class="v-tag">v2.9.8</small></span>
+                    <small class="v-tag">v3.0.0</small></span>
             </div>
             <div class="header-actions">
                 <button id="btnSettings" class="icon-btn"><i class="fas fa-cog"></i></button>
@@ -156,6 +156,74 @@
                         RAČUN</button>
                 </div>
                 <button id="btnCloseInquiry" class="btn-secondary" style="width: 100%; height: 45px;">Zatvori</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: CATALOG -->
+    <div id="catalogModal" class="modal full-screen">
+        <div class="modal-content glass-card no-radius">
+            <div class="modal-header">
+                <h2>SMART KATALOG</h2>
+                <button id="btnCloseCatalog" class="close-modal">&times;</button>
+            </div>
+
+            <div class="catalog-controls">
+                <div class="premium-search" style="margin-bottom: 10px;">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="catalogSearch" placeholder="Traži materijal (npr. XPS, Vuna...)">
+                </div>
+                <div id="categoryFilters" class="category-pills">
+                    <!-- Dinamički filteri -->
+                </div>
+            </div>
+
+            <div id="catalogList" class="catalog-grid">
+                <!-- Proizvodi ovdje -->
+            </div>
+
+            <div class="catalog-footer">
+                <button id="btnViewCart" class="btn-primary" style="width: 100%; height: 60px;">
+                    <i class="fas fa-shopping-cart"></i> PREGLEDAJ KOŠARICU (<span id="cartCount">0</span>)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: CHECKOUT -->
+    <div id="checkoutModal" class="modal">
+        <div class="modal-content glass-card">
+            <div class="modal-header">
+                <h2>IZRADA PONUDE</h2>
+                <button id="btnCloseCheckout" class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <label>KUPAC (Ime/Tvrtka)</label>
+                    <input type="text" id="chkName" placeholder="npr. Ivan Horvat">
+                </div>
+                <div class="input-group">
+                    <label>EMAIL ZA SLANJE</label>
+                    <input type="email" id="chkEmail" placeholder="ivan@example.com">
+                </div>
+                <div class="input-group">
+                    <label>PREDMET / LOKACIJA</label>
+                    <input type="text" id="chkSubject" placeholder="npr. Hidroizolacija terase">
+                </div>
+
+                <h3 style="font-family:'Orbitron'; font-size:0.7rem; color:var(--accent-orange); margin-top:20px;">
+                    STAVKE:</h3>
+                <div id="checkoutList" class="product-edit-list" style="max-height: 200px; overflow-y: auto;"></div>
+
+                <div class="total-bar">
+                    <span>UKUPNO:</span>
+                    <h2 id="chkTotal">0.00 €</h2>
+                </div>
+            </div>
+            <div class="modal-footer vertical">
+                <button id="btnSubmitOffer" class="btn-success" style="width: 100%; height: 60px;">
+                    <i class="fas fa-paper-plane"></i> KREIRAJ I POŠALJI PONUDU
+                </button>
             </div>
         </div>
     </div>
