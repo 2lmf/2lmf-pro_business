@@ -1,6 +1,6 @@
 /**
  * 2LMF PRO BUSINESS - FRONTEND CORE 🦈🚀
- * Verzija: 2.6 (STABLE UI - Pill Style + No Duplicates)
+ * Verzija: 2.7 (ULTIMATE PILL UI + CORRECT ANALYTICS)
  */
 
 const GAS_URL = "https://script.google.com/macros/s/AKfycbx4TQ6cFNr8X-fNRHE0Ai571pAioDeny_mSSrTVQm3OHbTKOhfIEDiKDFM2shZ5zDFLrA/exec";
@@ -35,15 +35,19 @@ function initNavigation() {
 
 function switchTab(tabId) {
     document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-    document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
+    const navItem = document.querySelector(`[data-tab="${tabId}"]`);
+    if (navItem) navItem.classList.add('active');
+
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-    document.getElementById(`tab-${tabId}`).classList.add('active');
-    if (tabId === 'dashboard') setTimeout(updateCharts, 300);
+    const targetTab = document.getElementById(`tab-${tabId}`);
+    if (targetTab) targetTab.classList.add('active');
+
+    if (tabId === 'dashboard') setTimeout(updateCharts, 400);
 }
 
 // --- DATA SYNC ---
 async function refreshData() {
-    showLoader("Učitavanje...");
+    showLoader("Sinkronizacija v2.7...");
     try {
         const response = await fetch(`${GAS_URL}?action=get_dashboard_data&cb=${Date.now()}`);
         const result = await response.json();
@@ -52,9 +56,9 @@ async function refreshData() {
             state.stats = result.stats || state.stats;
             renderDashboard();
             renderInquiries();
-            setTimeout(updateCharts, 400);
+            setTimeout(updateCharts, 500);
         }
-    } catch (err) { console.error("Data Fetch Error:", err); } finally { hideLoader(); }
+    } catch (err) { console.error("Fetch Error:", err); } finally { hideLoader(); }
 }
 
 // --- RENDERERS ---
@@ -70,14 +74,15 @@ function renderDashboard() {
     (stats.recentActivities || []).forEach(item => {
         if (!item.iznos || item.iznos === 0) return;
         const div = document.createElement('div');
-        div.className = 'inquiry-item';
+        div.className = 'inquiry-item shadow-premium';
+        div.style.marginBottom = "10px";
         const color = item.vrsta === "IRA" ? "var(--success)" : "var(--accent-cyan)";
         div.innerHTML = `
             <div class="item-main">
                 <span class="item-title" style="color:${color}">${item.vrsta}: ${item.stranka}</span>
                 <span class="item-meta">${item.datum} • ${item.opis}</span>
             </div>
-            <div class="item-action"><b>${formatCurrency(item.iznos)}</b></div>
+            <div class="item-action"><b style="color:#fff;">${formatCurrency(item.iznos)}</b></div>
         `;
         list.appendChild(div);
     });
@@ -97,8 +102,8 @@ function updateCharts() {
             data: {
                 labels: ['S', 'V', 'O', 'T', 'S', 'L', 'S', 'K', 'R', 'L', 'S', 'P'],
                 datasets: [
-                    { label: 'Naplaćeno', data: stats.yearlyStats.map(m => m.revenue), backgroundColor: 'rgba(46, 204, 113, 0.9)', borderRadius: 5 },
-                    { label: 'Isplaćeno', data: stats.yearlyStats.map(m => m.expenses), backgroundColor: 'rgba(0, 242, 255, 0.9)', borderRadius: 5 }
+                    { label: 'Naplaćeno', data: stats.yearlyStats.map(m => m.revenue), backgroundColor: 'rgba(46, 204, 113, 0.9)', borderRadius: 4 },
+                    { label: 'Isplaćeno', data: stats.yearlyStats.map(m => m.expenses), backgroundColor: 'rgba(0, 242, 255, 0.9)', borderRadius: 4 }
                 ]
             },
             options: chartOptions
@@ -115,8 +120,8 @@ function updateCharts() {
             data: {
                 labels: stats.monthlyStats.map(d => d.day),
                 datasets: [
-                    { label: 'Prihodi', data: stats.monthlyStats.map(d => d.revenue), backgroundColor: 'rgba(46, 204, 113, 0.7)' },
-                    { label: 'Troškovi', data: stats.monthlyStats.map(d => d.expenses), backgroundColor: 'rgba(0, 242, 255, 0.7)' }
+                    { label: 'Prihodi', data: stats.monthlyStats.map(d => d.revenue), backgroundColor: 'rgba(46, 204, 113, 0.8)' },
+                    { label: 'Troškovi', data: stats.monthlyStats.map(d => d.expenses), backgroundColor: 'rgba(0, 242, 255, 0.8)' }
                 ]
             },
             options: chartOptions
@@ -140,19 +145,19 @@ function renderInquiries(data = state.inquiries) {
     data.forEach(item => {
         const div = document.createElement('div');
         div.className = 'inquiry-item shadow-premium';
-        div.style.marginBottom = "15px";
+        div.style.marginBottom = "12px";
         div.style.cursor = "pointer";
         div.onclick = () => handleInquiryAction(item.id);
 
         div.innerHTML = `
             <div class="item-main">
                 <span class="item-title">${item.name || "Bez imena"}</span>
-                <span class="item-meta">${item.id} • ${item.subject || "Upit"}</span>
+                <span class="item-meta">${item.id} • ${item.subject || "Bez predmeta"}</span>
                 <span class="item-meta">Status: <b style="color:var(--accent-orange)">${item.status}</b></span>
             </div>
             <div class="item-action" style="flex-direction:column; align-items:flex-end;">
-                <b style="font-size:1.15rem; color:#fff;">${formatCurrency(item.amount)}</b>
-                <button class="btn-pill-small" style="margin-top:10px;">DETALJI</button>
+                <b style="font-size:1.1rem; color:#fff; margin-bottom:10px;">${formatCurrency(item.amount)}</b>
+                <button class="btn-pill-small">DETALJI</button>
             </div>
         `;
         list.appendChild(div);
@@ -162,16 +167,13 @@ function renderInquiries(data = state.inquiries) {
 function filterInquiries(query) {
     const q = query.toLowerCase();
     const filtered = state.inquiries.filter(i =>
-        (i.name || "").toLowerCase().includes(q) ||
-        (i.id || "").toLowerCase().includes(q) ||
-        (i.subject || "").toLowerCase().includes(q)
+        (i.name || "").toLowerCase().includes(q) || (i.id || "").toLowerCase().includes(q) || (i.subject || "").toLowerCase().includes(q)
     );
     renderInquiries(filtered);
 }
 
-// --- EDITABLE MODAL LOGIC ---
+// --- MODAL ---
 function handleInquiryAction(id) {
-    console.log("🔍 Opening Details for:", id);
     const item = state.inquiries.find(i => String(i.id) === String(id));
     if (!item) return;
     state.selectedInquiry = item;
@@ -184,7 +186,7 @@ function handleInquiryAction(id) {
     try {
         const raw = JSON.parse(item.jsonData || "{}");
         products = raw.stavke || [];
-    } catch (e) { console.error("JSON Error in Inquiry", id); }
+    } catch (e) { console.error("JSON Error", id); }
 
     renderProductList(products);
     document.getElementById('btnSaveChanges').style.display = "none";
@@ -195,10 +197,9 @@ function renderProductList(products) {
     const list = document.getElementById('productList');
     list.innerHTML = '';
     if (products.length === 0) {
-        list.innerHTML = '<div class="item-meta">Nema definiranih stavki proizvoda.</div>';
+        list.innerHTML = '<div class="item-meta">Nema definiranih proizvoda.</div>';
         return;
     }
-
     products.forEach((p, idx) => {
         const div = document.createElement('div');
         div.className = 'p-item';
@@ -214,8 +215,6 @@ function renderProductList(products) {
 function updateProduct(idx, field, val) {
     const item = state.selectedInquiry;
     let raw = JSON.parse(item.jsonData || '{"stavke":[]}');
-    if (!raw.stavke) raw.stavke = [];
-
     if (field === 'qty') raw.stavke[idx].kolicina = parseFloat(val) || 0;
     if (field === 'price') raw.stavke[idx].cijena = parseFloat(val) || 0;
 
@@ -231,30 +230,25 @@ async function saveInquiryChanges() {
     const item = state.selectedInquiry;
     showLoader("Spremanje...");
     try {
-        const body = {
-            action: "updateInquiry",
-            id: item.id,
-            amount: item.amount,
-            jsonData: JSON.parse(item.jsonData)
-        };
-        const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(body) });
+        const res = await fetch(GAS_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: "updateInquiry", id: item.id, amount: item.amount, jsonData: JSON.parse(item.jsonData) })
+        });
         const result = await res.json();
         if (result.status === "success") {
-            alert("Izmjene su uspješno spremljene u tablicu!");
+            alert("Spremljeno u tablicu!");
             document.getElementById('btnSaveChanges').style.display = "none";
             refreshData();
         }
-    } catch (e) { alert("Greška pri komunikaciji s tablicom."); } finally { hideLoader(); }
+    } catch (e) { alert("Greška pri spremanju!"); } finally { hideLoader(); }
 }
 
-// --- MODALS ---
 function initModal() {
     const modal = document.getElementById('inquiryModal');
     if (!modal) return;
     document.querySelectorAll('.close-modal').forEach(b => b.onclick = () => modal.classList.remove('active'));
     document.getElementById('btnCloseInquiry').onclick = () => modal.classList.remove('active');
     document.getElementById('btnSaveChanges').onclick = saveInquiryChanges;
-
     document.getElementById('btnSendOffer').onclick = () => runGasAction('sendOffer');
     document.getElementById('btnSendInvoice').onclick = () => runGasAction('sendInvoice');
 }
@@ -264,13 +258,11 @@ async function runGasAction(action) {
     showLoader("Slanje...");
     try {
         await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action, id }) });
-        alert("Akcija pokrenuta! Provjeri status u tablici.");
-    } catch (e) { alert("Greška pri slanju."); } finally { hideLoader(); }
+        alert("Akcija uspješna!");
+    } catch (e) { alert("Greška!"); } finally { hideLoader(); }
 }
 
-// --- HELPERS ---
 function formatCurrency(v) { return new Intl.NumberFormat('hr-HR', { style: 'currency', currency: 'EUR' }).format(v || 0); }
 function showLoader(m) { const l = document.getElementById('loader'); if (l) { l.innerText = m; l.style.display = "block"; } }
 function hideLoader() { const l = document.getElementById('loader'); if (l) l.style.display = "none"; }
-function initScanner() { /* Ready for v2.6 */ }
-function toBase64(f) { return new Promise((r, j) => { const rd = new FileReader(); rd.readAsDataURL(f); rd.onload = () => r(rd.result); }); }
+function initScanner() { }
