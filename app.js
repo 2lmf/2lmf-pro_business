@@ -216,12 +216,32 @@ function renderProducts(item) {
 function initModal() {
     const modal = document.getElementById('inquiryModal');
     if (!modal) return;
-    document.querySelectorAll('.close-modal').forEach(b => b.onclick = () => modal.classList.remove('active'));
-    document.getElementById('btnCloseInquiry').onclick = () => modal.classList.remove('active');
 
-    // Slanje ponude/računa iz detalja
-    document.getElementById('btnSendOffer').onclick = () => sendWithFeedback('btnSendOffer', 'sendOffer');
-    document.getElementById('btnSendInvoice').onclick = () => sendWithFeedback('btnSendInvoice', 'sendInvoice');
+    // Zatvaranje modala
+    document.querySelectorAll('.close-modal').forEach(b => {
+        b.onclick = () => {
+            modal.classList.remove('active');
+            document.getElementById('catalogModal').classList.remove('active');
+            document.getElementById('checkoutModal').classList.remove('active');
+        };
+    });
+
+    const btnOffer = document.getElementById('btnSendOffer');
+    const btnInvoice = document.getElementById('btnSendInvoice');
+
+    if (btnOffer) {
+        btnOffer.onclick = (e) => {
+            e.preventDefault();
+            sendWithFeedback('btnSendOffer', 'sendOffer');
+        };
+    }
+
+    if (btnInvoice) {
+        btnInvoice.onclick = (e) => {
+            e.preventDefault();
+            sendWithFeedback('btnSendInvoice', 'sendInvoice');
+        };
+    }
 }
 
 async function sendWithFeedback(btnId, action) {
@@ -314,16 +334,15 @@ async function openCatalog() {
 }
 
 function renderCategories() {
-    const cats = [...new Set(state.catalog.map(p => p.category))];
+    const cats = ["Ograde", "Hidro", "Termo", "Fasade"];
     const container = document.getElementById('categoryFilters');
     container.innerHTML = `<div class="pill active" onclick="renderCatalog(state.catalog); document.querySelectorAll('.pill').forEach(p=>p.classList.remove('active')); this.classList.add('active');">Sve</div>`;
     cats.forEach(c => {
-        if (!c) return;
         const div = document.createElement('div');
         div.className = 'pill';
         div.innerText = c;
         div.onclick = () => {
-            const filtered = state.catalog.filter(p => p.category === c);
+            const filtered = state.catalog.filter(p => (p.category || "").toUpperCase().includes(c.toUpperCase()));
             renderCatalog(filtered);
             document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
             div.classList.add('active');
