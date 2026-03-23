@@ -1,6 +1,6 @@
 /**
  * 2LMF PRO BUSINESS - FRONTEND CORE 🦈🚀
- * Verzija: 2.7 (ULTIMATE PILL UI + CORRECT ANALYTICS)
+ * Verzija: 2.8 (FIXED CHARTS + BETTER JSON PARSING + LABELS)
  */
 
 const GAS_URL = "https://script.google.com/macros/s/AKfycbx4TQ6cFNr8X-fNRHE0Ai571pAioDeny_mSSrTVQm3OHbTKOhfIEDiKDFM2shZ5zDFLrA/exec";
@@ -28,7 +28,6 @@ function initNavigation() {
             switchTab(tabId);
         });
     });
-
     const search = document.getElementById('inquirySearch');
     if (search) search.addEventListener('input', (e) => filterInquiries(e.target.value));
 }
@@ -42,12 +41,15 @@ function switchTab(tabId) {
     const targetTab = document.getElementById(`tab-${tabId}`);
     if (targetTab) targetTab.classList.add('active');
 
-    if (tabId === 'dashboard') setTimeout(updateCharts, 400);
+    // Resize charts on switch to dashboard
+    if (tabId === 'dashboard') {
+        setTimeout(updateCharts, 400);
+    }
 }
 
 // --- DATA SYNC ---
 async function refreshData() {
-    showLoader("Sinkronizacija v2.7...");
+    showLoader("Učitavanje v2.8...");
     try {
         const response = await fetch(`${GAS_URL}?action=get_dashboard_data&cb=${Date.now()}`);
         const result = await response.json();
@@ -56,7 +58,7 @@ async function refreshData() {
             state.stats = result.stats || state.stats;
             renderDashboard();
             renderInquiries();
-            setTimeout(updateCharts, 500);
+            setTimeout(updateCharts, 600);
         }
     } catch (err) { console.error("Fetch Error:", err); } finally { hideLoader(); }
 }
@@ -72,10 +74,9 @@ function renderDashboard() {
     const list = document.getElementById('activityList');
     list.innerHTML = '';
     (stats.recentActivities || []).forEach(item => {
-        if (!item.iznos || item.iznos === 0) return;
         const div = document.createElement('div');
         div.className = 'inquiry-item shadow-premium';
-        div.style.marginBottom = "10px";
+        div.style.marginBottom = "12px";
         const color = item.vrsta === "IRA" ? "var(--success)" : "var(--accent-cyan)";
         div.innerHTML = `
             <div class="item-main">
@@ -92,12 +93,11 @@ function updateCharts() {
     const stats = state.stats;
     if (!stats.yearlyStats || stats.yearlyStats.length === 0) return;
 
-    // Yearly
+    // Fixed Height handling
     const yEl = document.getElementById('yearlyChart');
     if (yEl) {
-        const yCtx = yEl.getContext('2d');
         if (state.charts.yearly) state.charts.yearly.destroy();
-        state.charts.yearly = new Chart(yCtx, {
+        state.charts.yearly = new Chart(yEl.getContext('2d'), {
             type: 'bar',
             data: {
                 labels: ['S', 'V', 'O', 'T', 'S', 'L', 'S', 'K', 'R', 'L', 'S', 'P'],
@@ -110,12 +110,10 @@ function updateCharts() {
         });
     }
 
-    // Monthly
     const mEl = document.getElementById('monthlyChart');
     if (mEl) {
-        const mCtx = mEl.getContext('2d');
         if (state.charts.monthly) state.charts.monthly.destroy();
-        state.charts.monthly = new Chart(mCtx, {
+        state.charts.monthly = new Chart(mEl.getContext('2d'), {
             type: 'bar',
             data: {
                 labels: stats.monthlyStats.map(d => d.day),
@@ -145,18 +143,17 @@ function renderInquiries(data = state.inquiries) {
     data.forEach(item => {
         const div = document.createElement('div');
         div.className = 'inquiry-item shadow-premium';
-        div.style.marginBottom = "12px";
-        div.style.cursor = "pointer";
         div.onclick = () => handleInquiryAction(item.id);
+        div.style.cursor = "pointer";
 
         div.innerHTML = `
             <div class="item-main">
                 <span class="item-title">${item.name || "Bez imena"}</span>
-                <span class="item-meta">${item.id} • ${item.subject || "Bez predmeta"}</span>
+                <span class="item-meta">${item.id} • ${item.subject || "Upit"}</span>
                 <span class="item-meta">Status: <b style="color:var(--accent-orange)">${item.status}</b></span>
             </div>
             <div class="item-action" style="flex-direction:column; align-items:flex-end;">
-                <b style="font-size:1.1rem; color:#fff; margin-bottom:10px;">${formatCurrency(item.amount)}</b>
+                <b style="font-size:1.15rem; color:#fff; margin-bottom:10px;">${formatCurrency(item.amount)}</b>
                 <button class="btn-pill-small">DETALJI</button>
             </div>
         `;
@@ -182,11 +179,14 @@ function handleInquiryAction(id) {
     document.getElementById('detEmail').innerText = item.email || "-";
     document.getElementById('detAmount').innerText = formatCurrency(item.amount);
 
+    // ROBUST JSON PARSING (detecting 'stavke', 'items', 'products')
     let products = [];
     try {
         const raw = JSON.parse(item.jsonData || "{}");
-        products = raw.stavke || [];
-    } catch (e) { console.error("JSON Error", id); }
+        products = raw.stavke || raw.items || raw.products || [];
+        // Fallback for flat array
+        if (Array.isArray(raw) && raw.length > 0) products = raw;
+    } catch (e) { console.error("JSON Error Inquiry #", id); }
 
     renderProductList(products);
     document.getElementById('btnSaveChanges').style.display = "none";
@@ -197,16 +197,16 @@ function renderProductList(products) {
     const list = document.getElementById('productList');
     list.innerHTML = '';
     if (products.length === 0) {
-        list.innerHTML = '<div class="item-meta">Nema definiranih proizvoda.</div>';
+        list.innerHTML = '<div class="item-meta">Nema definiranih artikla u JSON-u.</div>';
         return;
     }
     products.forEach((p, idx) => {
         const div = document.createElement('div');
         div.className = 'p-item';
         div.innerHTML = `
-            <div class="p-name">${p.naziv || p.name || "Stavka"}</div>
-            <input type="number" class="p-input p-qty" value="${p.kolicina || p.qty || 0}" onchange="updateProduct(${idx}, 'qty', this.value)">
-            <input type="number" class="p-input p-price" value="${p.cijena || p.price || 0}" onchange="updateProduct(${idx}, 'price', this.value)">
+            <div class="p-name">${p.naziv || p.name || p.title || "Artikl"}</div>
+            <input type="number" class="p-input p-qty" value="${p.kolicina || p.qty || p.count || 0}" onchange="updateProduct(${idx}, 'qty', this.value)">
+            <input type="number" class="p-input p-price" value="${p.cijena || p.price || p.val || 0}" onchange="updateProduct(${idx}, 'price', this.value)">
         `;
         list.appendChild(div);
     });
@@ -215,12 +215,20 @@ function renderProductList(products) {
 function updateProduct(idx, field, val) {
     const item = state.selectedInquiry;
     let raw = JSON.parse(item.jsonData || '{"stavke":[]}');
-    if (field === 'qty') raw.stavke[idx].kolicina = parseFloat(val) || 0;
-    if (field === 'price') raw.stavke[idx].cijena = parseFloat(val) || 0;
+    if (!raw.stavke) raw.stavke = raw.items || raw.products || [];
 
-    let total = raw.stavke.reduce((sum, p) => sum + ((p.kolicina || 0) * (p.cijena || 0)), 0);
+    if (field === 'qty') {
+        const p = raw.stavke[idx];
+        if (p) p.kolicina = parseFloat(val) || 0;
+    }
+    if (field === 'price') {
+        const p = raw.stavke[idx];
+        if (p) p.cijena = parseFloat(val) || 0;
+    }
+
+    let total = raw.stavke.reduce((sum, p) => sum + ((p.kolicina || p.qty || 0) * (p.cijena || p.price || 0)), 0);
     item.amount = total;
-    item.jsonData = JSON.stringify(raw);
+    item.jsonData = JSON.stringify({ stavke: raw.stavke });
 
     document.getElementById('detAmount').innerText = formatCurrency(total);
     document.getElementById('btnSaveChanges').style.display = "block";
@@ -230,10 +238,8 @@ async function saveInquiryChanges() {
     const item = state.selectedInquiry;
     showLoader("Spremanje...");
     try {
-        const res = await fetch(GAS_URL, {
-            method: 'POST',
-            body: JSON.stringify({ action: "updateInquiry", id: item.id, amount: item.amount, jsonData: JSON.parse(item.jsonData) })
-        });
+        const body = { action: "updateInquiry", id: item.id, amount: item.amount, jsonData: JSON.parse(item.jsonData) };
+        const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(body) });
         const result = await res.json();
         if (result.status === "success") {
             alert("Spremljeno u tablicu!");
@@ -258,7 +264,7 @@ async function runGasAction(action) {
     showLoader("Slanje...");
     try {
         await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action, id }) });
-        alert("Akcija uspješna!");
+        alert("Akcija pokrenuta!");
     } catch (e) { alert("Greška!"); } finally { hideLoader(); }
 }
 
