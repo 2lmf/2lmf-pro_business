@@ -610,12 +610,10 @@ async function handleSaveLocation() {
 
             if (data.status === 'success' || data.success) {
                 btn.innerHTML = '<i class="fas fa-check"></i> SPREMLJENO!';
-                feedback.innerText = "Uspješno spremljeno u Sheet.";
+                feedback.innerText = "Uspješno spremljeno u bazu.";
                 
                 setTimeout(() => {
-                    if (confirm("Želiš li dodati sliku?")) {
-                        document.getElementById('locationPhotoInput').click();
-                    }
+                    document.getElementById('photoModal').style.display = 'block';
                     btn.disabled = false;
                     btn.innerHTML = '<i class="fas fa-satellite"></i> SNIMI MOJU LOKACIJU';
                     refreshData();
@@ -657,6 +655,13 @@ async function handlePhotoUpload(file) {
     } catch (e) { alert("Greška kod uploada!"); }
 }
 
+function confirmPhoto(choice) {
+    document.getElementById('photoModal').style.display = 'none';
+    if (choice) {
+        document.getElementById('locationPhotoInput').click();
+    }
+}
+
 function renderLocations() {
     const list = document.getElementById('locationsList');
     if (!list) return;
@@ -670,17 +675,26 @@ function renderLocations() {
         return;
     }
 
-    list.innerHTML = locs.map(loc => `
+    list.innerHTML = locs.map(loc => {
+        // Robusniji link direktno preko koordinata da izbjegnemo 404 ako GAS formula zeza
+        const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${loc.lat},${loc.lng}`;
+        
+        return `
         <div class="glass-card shadow-premium" style="margin-bottom:15px; border-left: 4px solid var(--accent-cyan);">
             <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                <div>
-                    <h3 style="font-family:'Orbitron'; font-size:0.8rem; color:var(--accent-cyan); margin-bottom:5px;">${loc.biljeska}</h3>
-                    <p style="font-size:0.7rem; color:var(--text-secondary);">${loc.datum} u ${loc.sat}</p>
+                <div style="flex:1;">
+                    <h3 style="font-family:'Orbitron'; font-size:0.75rem; color:var(--accent-cyan); margin-bottom:5px;">
+                        ${loc.biljeska || 'Spremljena lokacija'}
+                    </h3>
+                    <p style="font-size:0.65rem; color:var(--text-secondary);">${loc.datum} u ${loc.sat}</p>
                 </div>
-                <a href="${loc.mapsLink}" target="_blank" class="btn-pill-small" style="border-color:var(--accent-cyan); color:var(--accent-cyan); transform:scale(0.8); white-space:nowrap;">
-                    <i class="fas fa-external-link-alt"></i> MAPE
-                </a>
+                <div style="display:flex; gap:5px;">
+                    <a href="${mapsUrl}" target="_blank" class="btn-pill-small" style="border-color:var(--accent-cyan); color:var(--accent-cyan); transform:scale(0.8); white-space:nowrap;">
+                        <i class="fas fa-directions"></i> MAPE
+                    </a>
+                </div>
             </div>
         </div>
-    `).join('');
+        `;
+    }).join('');
 }

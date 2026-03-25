@@ -146,6 +146,24 @@
         </nav>
     </div>
 
+
+    <!-- MODAL: PHOTO PROMPT -->
+    <div id="photoModal" class="modal">
+        <div class="modal-content glass-card shadow-ultra" style="max-width: 350px; text-align: center; border: 1px solid var(--accent-cyan); position: relative; margin: 15% auto; padding: 30px;">
+            <i class="fas fa-camera" style="font-size: 3rem; color: var(--accent-cyan); margin-bottom: 20px; display: block;"></i>
+            <h2 style="font-family: 'Orbitron'; font-size: 1rem; margin-bottom: 15px; letter-spacing: 1px;">LOKACIJA SNIMLJENA!</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 25px; font-size: 0.8rem;">Želiš li dodati fotografiju s terena?</p>
+            <div style="display: flex; gap: 10px; flex-direction: column;">
+                <button class="btn-cyan" onclick="confirmPhoto(true)" style="width:100%;">
+                    <i class="fas fa-camera"></i> DA, DODAJ SLIKU
+                </button>
+                <button class="btn-secondary" onclick="confirmPhoto(false)" style="width:100%; border: 1px solid rgba(255,255,255,0.1); background: transparent;">
+                    <i class="fas fa-times"></i> NE, HVALA
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL: INQUIRY -->
     <div id="inquiryModal" class="modal">
         <div class="modal-content glass-card">
