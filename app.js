@@ -57,7 +57,7 @@ function switchTab(id) {
 async function refreshData() {
     showLoader("Učitavanje...");
     try {
-        const res = await fetch(`${GAS_URL}?action=get_dashboard_data`);
+        const res = await fetch(`${GAS_URL}?action=get_dashboard_data`, { redirect: 'follow' });
         const data = await res.json();
         if (data.status === 'success') {
             state.inquiries = data.inquiries;
@@ -566,9 +566,19 @@ function filterInquiries(query) {
     renderInquiries(filtered);
 }
 
+// --- API HELPERS (SharkTrack style) ---
+async function apiPost(data) {
+    const response = await fetch(GAS_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify(data),
+        redirect: 'follow'
+    });
+    return response.json();
+}
+
 // --- LOCATIONS MODULE ---
 function initLocations() {
-    // Moved to window.handleSaveLocation for direct HTML access
     const photoInput = document.getElementById('locationPhotoInput');
     if (photoInput) {
         photoInput.onchange = (e) => handlePhotoUpload(e.target.files[0]);
@@ -580,67 +590,46 @@ async function handleSaveLocation() {
     const feedback = document.getElementById('gpsFeedback');
     
     if (!navigator.geolocation) {
-        return alert("GPS nije podržan na ovom uređaju.");
+        return alert("GPS nije podržan.");
     }
 
-    const note = "Zabilježena lokacija"; // Removed prompt as per user request
+    const note = "Zabilježena lokacija"; 
     
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-satellite-dish fa-spin"></i> SPREMAM LOKACIJU...';
-    feedback.style.color = 'var(--accent-orange)';
-    feedback.innerText = "HVATAM SATELIT... (Provjeri dopuštenja)";
+    feedback.innerText = "HVATAM SATELIT...";
 
     navigator.geolocation.getCurrentPosition(async (pos) => {
-        const lat = pos.coords.latitude;
-        const lng = pos.coords.longitude;
-        
         try {
-            console.log("Sending to GAS:", { lat, lng, note });
-            const res = await fetch(GAS_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain' },
-                body: JSON.stringify({
-                    action: 'saveLocation',
-                    lat: lat,
-                    lng: lng,
-                    note: note || "Bez bilješke"
-                })
+            const data = await apiPost({
+                action: 'saveLocation',
+                lat: pos.coords.latitude,
+                lng: pos.coords.longitude,
+                note: note
             });
-            
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            
-            const text = await res.text();
-            let data;
-            try {
-                data = JSON.parse(text);
-            } catch (e) {
-                throw new Error("Server je vratio neispravan format: " + text.substring(0, 100));
-            }
 
-            if (data.status === 'success') {
-                btn.innerHTML = '<i class="fas fa-check"></i> LOKACIJA SPREMLJENA!';
-                feedback.innerText = "Lokacija uspješno zapisana u Sheet.";
+            if (data.status === 'success' || data.success) {
+                btn.innerHTML = '<i class="fas fa-check"></i> SPREMLJENO!';
+                feedback.innerText = "Uspješno spremljeno u Sheet.";
                 
-                // --- PHOTO OPTION ---
                 setTimeout(() => {
-                    if (confirm("Želiš li dodati sliku ovoj lokaciji?")) {
+                    if (confirm("Želiš li dodati sliku?")) {
                         document.getElementById('locationPhotoInput').click();
                     }
-                    
                     btn.disabled = false;
                     btn.innerHTML = '<i class="fas fa-satellite"></i> SNIMI MOJU LOKACIJU';
                     refreshData();
                 }, 1000);
             } else {
-                throw new Error(data.message);
+                throw new Error(data.message || data.error);
             }
         } catch (e) {
-            alert("Greška pri spremanju: " + e.message);
+            alert("Greška: " + e.message);
             btn.disabled = false;
             btn.innerHTML = '<i class="fas fa-satellite"></i> SNIMI MOJU LOKACIJU';
         }
     }, (err) => {
-        alert("GPS Error: " + err.message);
+        alert("GPS Greška: " + err.message);
         btn.disabled = false;
         btn.innerHTML = '<i class="fas fa-satellite"></i> SNIMI MOJU LOKACIJU';
     }, { enableHighAccuracy: true, timeout: 15000 });
@@ -648,29 +637,22 @@ async function handleSaveLocation() {
 
 async function handlePhotoUpload(file) {
     if (!file) return;
-    
     const feedback = document.getElementById('gpsFeedback');
-    feedback.innerText = "Komprimiram i šaljem sliku...";
+    feedback.innerText = "Šaljem sliku...";
     
     try {
         const reader = new FileReader();
         reader.readAsDataURL(file);
         reader.onload = async () => {
-            const base64 = reader.result;
-            const res = await fetch(GAS_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain' },
-                body: JSON.stringify({
-                    action: 'uploadPhoto',
-                    imageBase64: base64,
-                    filename: `shark_site_${Date.now()}.jpg`
-                })
+            const data = await apiPost({
+                action: 'uploadPhoto',
+                imageBase64: reader.result,
+                filename: `site_${Date.now()}.jpg`
             });
-            const data = await res.json();
-            if (data.status === 'success') {
-                feedback.innerText = "Slika uspješno dodana! ✅";
+            if (data.status === 'success' || data.success) {
+                feedback.innerText = "Slika dodana! ✅";
                 refreshData();
-            } else { alert("Greška kod slike: " + data.message); }
+            } else { alert("Greška kod slike: " + (data.message || data.error)); }
         };
     } catch (e) { alert("Greška kod uploada!"); }
 }

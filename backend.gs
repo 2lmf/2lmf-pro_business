@@ -10,16 +10,19 @@ function doGet(e) {
   try {
     var action = e.parameter.action;
     var ss = SpreadsheetApp.openById(pwa_prop.getProperty("SHEET_ID") || pwa_sheet_id);
+    var result;
+    
     if (action === 'get_dashboard_data') {
       var inquiries = getInquiriesWithLimit(ss, 250); 
       var stats = calculateAdvancedStats(ss);
-      var locations = getLocations(ss);
-      return createJsonResponse({ status: "success", inquiries: inquiries, stats: stats, locations: locations });
+      result = { status: "success", inquiries: inquiries, stats: stats, locations: getLocations(ss) };
     }
-    if (action === 'get_locations') {
-      return createJsonResponse({ status: "success", locations: getLocations(ss) });
+    else if (action === 'get_locations') {
+      result = { status: "success", locations: getLocations(ss) };
     }
-    return createJsonResponse({ status: "error", message: "Nepoznata akcija" });
+    else { result = { status: "error", message: "Nepoznata akcija" }; }
+    
+    return createJsonResponse(result);
   } catch (err) { return createJsonResponse({ status: "error", message: err.toString() }); }
 }
 
@@ -28,11 +31,15 @@ function doPost(e) {
     var postData = JSON.parse(e.postData.contents);
     var action = postData.action;
     var ss = SpreadsheetApp.openById(pwa_prop.getProperty("SHEET_ID") || pwa_sheet_id);
-    if (action === 'updateInquiry') { return handleUpdateInquiry(ss, postData); }
-    if (action === 'saveLocation') { return saveLocation(ss, postData); }
-    if (action === 'uploadPhoto') { return uploadPhoto(postData); }
-    if (action === 'sendOffer' || action === 'sendInvoice') { return createJsonResponse({ status: "success" }); }
-    return createJsonResponse({ status: "error" });
+    
+    var result;
+    if (action === 'updateInquiry') { result = handleUpdateInquiry(ss, postData); }
+    else if (action === 'saveLocation') { result = saveLocation(ss, postData); }
+    else if (action === 'uploadPhoto') { result = uploadPhoto(postData); }
+    else if (action === 'sendOffer' || action === 'sendInvoice') { result = { status: "success" }; }
+    else { result = { status: "error", message: "Unknown action" }; }
+    
+    return createJsonResponse(result);
   } catch (err) { return createJsonResponse({ status: "error", message: err.toString() }); }
 }
 
@@ -152,6 +159,53 @@ function createJsonResponse(data) {
   return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(ContentService.MimeType.JSON);
 }
 
+// --- LOCATIONS MODULE (SharkTrack Port) ---
+function saveLocation(ss, data) {
+  try {
+    let sheet = ss.getSheetByName('Lokacije');
+    if (!sheet) {
+      sheet = ss.insertSheet('Lokacije');
+      sheet.appendRow(['Datum', 'Sat', 'Lat', 'Lng', 'Maps Link', 'Bilješka', 'Foto Link']);
+      sheet.getRange(1, 1, 1, 7).setBackground('#1a1a2e').setFontColor('#ffffff').setFontWeight('bold');
+    }
+
+    var now = new Date();
+    var datum = Utilities.formatDate(now, 'Europe/Zagreb', 'dd.MM.yyyy');
+    var sat = Utilities.formatDate(now, 'Europe/Zagreb', 'HH:mm');
+    var lat = data.lat;
+    var lng = data.lng;
+    var mapsLink = "https://www.google.com/maps?q=" + lat + "," + lng;
+    var note = data.note || '';
+
+    sheet.appendRow([datum, sat, lat, lng, mapsLink, note, '']);
+    
+    var lastRow = sheet.getLastRow();
+    sheet.getRange(lastRow, 5).setFormula('=HYPERLINK("' + mapsLink + '","📍 Otvori")');
+
+    return { success: true, status: "success" };
+  } catch (e) { return { success: false, status: "error", message: e.toString() }; }
+}
+
+function getLocations(ss) {
+  try {
+    var sheet = ss.getSheetByName('Lokacije');
+    if (!sheet || sheet.getLastRow() <= 1) return [];
+    
+    var data = sheet.getDataRange().getValues().slice(1);
+    return data.reverse().map(function(row) {
+      return {
+        datum: row[0],
+        sat: row[1],
+        lat: row[2],
+        lng: row[3],
+        mapsLink: row[4],
+        biljeska: row[5],
+        fotoLink: row[6]
+      };
+    });
+  } catch (e) { return []; }
+}
+
 function uploadPhoto(data) {
   try {
     var folderName = "Shark Business Slike";
@@ -170,7 +224,6 @@ function uploadPhoto(data) {
 
     var fileUrl = file.getUrl();
     
-    // Update the last saved location with this photo link
     var ssId = PropertiesService.getScriptProperties().getProperty("SHEET_ID") || "1YmRZMeomWxAmfi6rsLN6qKrHrrAeHOnGVbnfsZXP3w4";
     var ss = SpreadsheetApp.openById(ssId);
     var sheet = ss.getSheetByName('Lokacije');
@@ -178,51 +231,8 @@ function uploadPhoto(data) {
       sheet.getRange(sheet.getLastRow(), 7).setValue(fileUrl); 
     }
 
-    return createJsonResponse({ status: "success", url: fileUrl });
+    return { success: true, status: "success", url: fileUrl };
   } catch (e) {
-    return createJsonResponse({ status: "error", message: e.toString() });
+    return { success: false, status: "error", message: e.toString() };
   }
-}
-
-// --- LOCATIONS MODULE ---
-function saveLocation(ss, data) {
-  var sheet = ss.getSheetByName('Lokacije');
-  if (!sheet) {
-    sheet = ss.insertSheet('Lokacije');
-    sheet.appendRow(['Datum', 'Sat', 'Lat', 'Lng', 'Maps Link', 'Bilješka']);
-    sheet.getRange(1, 1, 1, 6).setBackground('#1a1a2e').setFontColor('#ffffff').setFontWeight('bold');
-  }
-
-  var now = new Date();
-  var datum = Utilities.formatDate(now, 'Europe/Zagreb', 'dd.MM.yyyy');
-  var sat = Utilities.formatDate(now, 'Europe/Zagreb', 'HH:mm');
-  var lat = data.lat;
-  var lng = data.lng;
-  var mapsLink = "https://www.google.com/maps?q=" + lat + "," + lng;
-  var note = data.note || '';
-
-  sheet.appendRow([datum, sat, lat, lng, mapsLink, note]);
-  
-  // Create hyperlink for maps
-  var lastRow = sheet.getLastRow();
-  sheet.getRange(lastRow, 5).setFormula('=HYPERLINK("' + mapsLink + '","📍 Otvori")');
-
-  return createJsonResponse({ status: "success" });
-}
-
-function getLocations(ss) {
-  var sheet = ss.getSheetByName('Lokacije');
-  if (!sheet || sheet.getLastRow() <= 1) return [];
-  
-  var data = sheet.getDataRange().getValues().slice(1);
-  return data.reverse().map(function(row) {
-    return {
-      datum: row[0],
-      sat: row[1],
-      lat: row[2],
-      lng: row[3],
-      mapsLink: row[4],
-      biljeska: row[5]
-    };
-  });
 }
