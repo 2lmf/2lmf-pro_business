@@ -108,6 +108,20 @@
                 </div>
                 <div id="receiptHistory" class="history-list"></div>
             </section>
+
+            <!-- TAB: LOCATIONS -->
+            <section id="tab-locations" class="tab-content">
+                <div class="scanner-hero glass-card shadow-premium" style="border: 1px dashed var(--accent-cyan) !important; background: rgba(0, 242, 255, 0.05);">
+                    <i class="fas fa-map-marker-alt hero-icon" style="color: var(--accent-cyan)"></i>
+                    <h2>Shark Sites 🗺️</h2>
+                    <p>Snimi svoju trenutnu GPS lokaciju (npr. novo gradilište ili zanimljiv objekt) kako bi je kasnije lako pronašao.</p>
+                    <button class="btn-cyan" id="btnSaveLocation" style="margin-top: 10px; width: 100%;">
+                        <i class="fas fa-satellite"></i> SNIMI MOJU LOKACIJU
+                    </button>
+                    <div id="gpsFeedback" style="font-size: 0.7rem; color: var(--text-secondary); margin-top: 10px;"></div>
+                </div>
+                <div id="locationsList" class="list-container"></div>
+            </section>
         </main>
 
         <!-- NAV -->
@@ -120,6 +134,9 @@
             </a>
             <a href="#" class="nav-item" data-tab="receipts">
                 <i class="fas fa-receipt"></i><span>Troškovi</span>
+            </a>
+            <a href="#" class="nav-item" data-tab="locations">
+                <i class="fas fa-map-marker-alt"></i><span>Lokacije</span>
             </a>
         </nav>
     </div>

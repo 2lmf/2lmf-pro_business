@@ -9,6 +9,29 @@
         href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Outfit:wght@300;400;600&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-5327504092"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', 'AW-5327504092');
+
+        // Helper function to delay opening a URL until a gtag event is sent.
+        function gtagSendEvent(url) {
+            var callback = function () {
+                if (typeof url === 'string') {
+                    window.location = url;
+                }
+            };
+            gtag('event', 'conversion_event_submit_lead_form_1', {
+                'event_callback': callback,
+                'event_timeout': 2000
+            });
+            return false;
+        }
+    </script>
     <style>
         :root {
             --accent-orange: #E67E22;
@@ -349,7 +372,7 @@
                     <li class="disabled"><i class="fas fa-times"></i> Foto dokumentacija s terena</li>
                     <li class="disabled"><i class="fas fa-times"></i> Tehnička podrška</li>
                 </ul>
-                <a href="#" class="btn">ODABERI START</a>
+                <a href="#kontakt" class="btn" onclick="return gtagSendEvent('#kontakt')">ODABERI START</a>
             </div>
 
             <!-- PRO -->
@@ -365,7 +388,7 @@
                     <li><i class="fas fa-check"></i> **Foto arhiva terena** (linkovi u ponudi)</li>
                     <li><i class="fas fa-check"></i> 60 dana direktne podrške</li>
                 </ul>
-                <a href="#" class="btn">ODABERI PRO</a>
+                <a href="#kontakt" class="btn" onclick="return gtagSendEvent('#kontakt')">ODABERI PRO</a>
             </div>
 
             <!-- PARTNER -->
@@ -380,7 +403,7 @@
                     <li><i class="fas fa-check"></i> Hosting na vašoj domeni</li>
                     <li><i class="fas fa-check"></i> Redoviti backup i optimizacija baze</li>
                 </ul>
-                <a href="#" class="btn">POSTANI PARTNER</a>
+                <a href="#kontakt" class="btn" onclick="return gtagSendEvent('#kontakt')">POSTANI PARTNER</a>
             </div>
         </div>
     </section>

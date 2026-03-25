@@ -13,7 +13,11 @@ function doGet(e) {
     if (action === 'get_dashboard_data') {
       var inquiries = getInquiriesWithLimit(ss, 250); 
       var stats = calculateAdvancedStats(ss);
-      return createJsonResponse({ status: "success", inquiries: inquiries, stats: stats });
+      var locations = getLocations(ss);
+      return createJsonResponse({ status: "success", inquiries: inquiries, stats: stats, locations: locations });
+    }
+    if (action === 'get_locations') {
+      return createJsonResponse({ status: "success", locations: getLocations(ss) });
     }
     return createJsonResponse({ status: "error", message: "Nepoznata akcija" });
   } catch (err) { return createJsonResponse({ status: "error", message: err.toString() }); }
@@ -25,6 +29,7 @@ function doPost(e) {
     var action = postData.action;
     var ss = SpreadsheetApp.openById(pwa_prop.getProperty("SHEET_ID") || pwa_sheet_id);
     if (action === 'updateInquiry') { return handleUpdateInquiry(ss, postData); }
+    if (action === 'saveLocation') { return saveLocation(ss, postData); }
     if (action === 'sendOffer' || action === 'sendInvoice') { return createJsonResponse({ status: "success" }); }
     return createJsonResponse({ status: "error" });
   } catch (err) { return createJsonResponse({ status: "error", message: err.toString() }); }
@@ -144,4 +149,47 @@ function parseDate(val) {
 
 function createJsonResponse(data) {
   return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(ContentService.MimeType.JSON);
+}
+
+// --- LOCATIONS MODULE ---
+function saveLocation(ss, data) {
+  var sheet = ss.getSheetByName('Lokacije');
+  if (!sheet) {
+    sheet = ss.insertSheet('Lokacije');
+    sheet.appendRow(['Datum', 'Sat', 'Lat', 'Lng', 'Maps Link', 'Bilješka']);
+    sheet.getRange(1, 1, 1, 6).setBackground('#1a1a2e').setFontColor('#ffffff').setFontWeight('bold');
+  }
+
+  var now = new Date();
+  var datum = Utilities.formatDate(now, 'GMT+1', 'dd.MM.yyyy');
+  var sat = Utilities.formatDate(now, 'GMT+1', 'HH:mm');
+  var lat = data.lat;
+  var lng = data.lng;
+  var mapsLink = "https://www.google.com/maps?q=" + lat + "," + lng;
+  var note = data.note || '';
+
+  sheet.appendRow([datum, sat, lat, lng, mapsLink, note]);
+  
+  // Create hyperlink for maps
+  var lastRow = sheet.getLastRow();
+  sheet.getRange(lastRow, 5).setFormula('=HYPERLINK("' + mapsLink + '","📍 Otvori")');
+
+  return createJsonResponse({ status: "success" });
+}
+
+function getLocations(ss) {
+  var sheet = ss.getSheetByName('Lokacije');
+  if (!sheet || sheet.getLastRow() <= 1) return [];
+  
+  var data = sheet.getDataRange().getValues().slice(1);
+  return data.reverse().map(function(row) {
+    return {
+      datum: row[0],
+      sat: row[1],
+      lat: row[2],
+      lng: row[3],
+      mapsLink: row[4],
+      biljeska: row[5]
+    };
+  });
 }

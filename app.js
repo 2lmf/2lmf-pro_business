@@ -18,6 +18,7 @@ async function init() {
     initModal();
     initScanner();
     initCatalog();
+    initLocations();
     await refreshData();
     initPullToRefresh();
 
@@ -59,6 +60,7 @@ async function refreshData() {
         if (data.status === 'success') {
             state.inquiries = data.inquiries;
             state.stats = data.stats;
+            state.locations = data.locations || [];
             renderAll();
         }
     } catch (err) { console.error("Error:", err); }
@@ -70,6 +72,7 @@ function renderAll() {
     renderCharts();
     renderActivities();
     renderInquiries();
+    renderLocations();
 }
 
 function renderStats() {
@@ -559,4 +562,97 @@ function filterInquiries(query) {
     const q = query.toLowerCase();
     const filtered = state.inquiries.filter(i => (i.name || "").toLowerCase().includes(q) || (i.subject || "").toLowerCase().includes(q));
     renderInquiries(filtered);
+}
+
+// --- LOCATIONS MODULE ---
+function initLocations() {
+    const btn = document.getElementById('btnSaveLocation');
+    if (btn) btn.onclick = saveNewLocation;
+}
+
+async function saveNewLocation() {
+    const btn = document.getElementById('btnSaveLocation');
+    const feedback = document.getElementById('gpsFeedback');
+    
+    if (!navigator.geolocation) {
+        return alert("GPS nije podržan na ovom uređaju.");
+    }
+
+    const note = prompt("Unesi kratku bilješku o ovoj lokaciji (npr. 'Novo gradilište - krov 200m2'):");
+    if (note === null) return; // Cancelled
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> HVATAM GPS...';
+    feedback.innerText = "Molim pričekaj, dohvaćam tvoju točnu lokaciju...";
+
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        
+        btn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> SPREMAM NA CLOUD...';
+        
+        try {
+            const res = await fetch(GAS_URL, {
+                method: 'POST',
+                body: JSON.stringify({
+                    action: 'saveLocation',
+                    lat: lat,
+                    lng: lng,
+                    note: note || "Bez bilješke"
+                })
+            });
+            const data = await res.json();
+            if (data.status === 'success') {
+                btn.innerHTML = '<i class="fas fa-check"></i> SPREMLJENO!';
+                feedback.innerText = `Lokacija spremljena u ${new Date().toLocaleTimeString()}`;
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-satellite"></i> SNIMI MOJU LOKACIJU';
+                    refreshData();
+                }, 2000);
+            } else {
+                throw new Error(data.message);
+            }
+        } catch (e) {
+            alert("Greška pri spremanju: " + e.message);
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-satellite"></i> SNIMI MOJU LOKACIJU';
+        }
+    }, (err) => {
+        let msg = "GPS greška: ";
+        if (err.code === 1) msg += "Pristup lokaciji odbijen.";
+        else if (err.code === 2) msg += "Lokacija nedostupna.";
+        else if (err.code === 3) msg += "Timeout.";
+        alert(msg);
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-satellite"></i> SNIMI MOJU LOKACIJU';
+    }, { enableHighAccuracy: true, timeout: 10000 });
+}
+
+function renderLocations() {
+    const list = document.getElementById('locationsList');
+    if (!list) return;
+    const locs = state.locations || [];
+    
+    if (locs.length === 0) {
+        list.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-secondary); opacity:0.5;">
+            <i class="fas fa-map-marked-alt" style="font-size:3rem; margin-bottom:15px; display:block;"></i>
+            Još nema spremljenih lokacija.
+        </div>`;
+        return;
+    }
+
+    list.innerHTML = locs.map(loc => `
+        <div class="glass-card shadow-premium" style="margin-bottom:15px; border-left: 4px solid var(--accent-cyan);">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <div>
+                    <h3 style="font-family:'Orbitron'; font-size:0.8rem; color:var(--accent-cyan); margin-bottom:5px;">${loc.biljeska}</h3>
+                    <p style="font-size:0.7rem; color:var(--text-secondary);">${loc.datum} u ${loc.sat}</p>
+                </div>
+                <a href="${loc.mapsLink}" target="_blank" class="btn-pill-small" style="border-color:var(--accent-cyan); color:var(--accent-cyan); transform:scale(0.8); white-space:nowrap;">
+                    <i class="fas fa-external-link-alt"></i> MAPE
+                </a>
+            </div>
+        </div>
+    `).join('');
 }

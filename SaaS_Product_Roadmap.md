@@ -46,6 +46,25 @@ Budući da je fiskalizacija komplicirana za male igrače, predlažem "slojeviti"
 - **Model "Kuharica":** Prodaješ samo upute i predložak Sheeta (jednokratno).
 - **Model "Full Service":** Postavljaš sve za njih, personaliziraš logo i boje (High-ticket).
 - **Model "Održavanje":** Ako koristiš tvoj centralni hosting za frontend, možeš naplaćivati sitnu godišnju pretplatu za "Update & Cloud".
+### 🤖 AI Shark Modul (Budućnost v6.0)
+- **Voice-to-Offer:** Snimi glasovnu bilješku na terenu -> AI je pretvara u popunjenu tablicu (stavke, količine).
+- **AI Analiza Slike:** Slikaj krov ili ogradu -> AI procjenjuje dimenzije ili vrstu materijala.
+- **Auto-Follow-up:** AI prati status ponude i sam piše podsjetnik kupcu nakon 3 dana.
+
+### 🗺️ Google Maps & GPS Modul (v5.0 - RADIMO SAD)
+- **Problem:** Vlasnici ne znaju točno gdje su ponude napravljene niti imaju pregled terena.
+- **Rješenje:** Svaka ponuda automatski bilježi GPS koordinate (Lat/Lng).
+    - *Značajka 1:* Vizualizacija svih ponuda na Google karti unutar aplikacije.
+    - *Značajka 2:* "Dokaz dolaska" — vrijeme i lokacija su geolocirani.
+    - *Značajka 3:* Pametne rute — AI poredak upita za najmanju potrošnju goriva.
+
+---
+## 🌅 PLAN ZA DANAS (v5.0)
+1. **Frontend GPS:** Hvatanje koordinata pri svakom spremanju upita.
+2. **Backend Sync:** Proširenje Google Sheeta za Lat/Lng stupce.
+3. **Map Dashboard:** Tipka za prikaz svih lokacija na interaktivnoj mapi.
+
+---
 
 ## 4. Sljedeći Tehnički Koraci
 - [ ] Implementirati `localStorage` logiku za `GAS_URL` u `app.js`.

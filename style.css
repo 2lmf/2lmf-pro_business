@@ -143,6 +143,12 @@ body {
     height: 100%;
 }
 
+/* --- SPECIAL ACCENTS --- */
+.btn-cyan {
+    border-color: var(--accent-cyan) !important;
+    color: var(--accent-cyan) !important;
+}
+
 /* --- BUTTONS --- */
 .btn-primary,
 .btn-cyan,
