@@ -30,6 +30,7 @@ function doPost(e) {
     var ss = SpreadsheetApp.openById(pwa_prop.getProperty("SHEET_ID") || pwa_sheet_id);
     if (action === 'updateInquiry') { return handleUpdateInquiry(ss, postData); }
     if (action === 'saveLocation') { return saveLocation(ss, postData); }
+    if (action === 'uploadPhoto') { return uploadPhoto(postData); }
     if (action === 'sendOffer' || action === 'sendInvoice') { return createJsonResponse({ status: "success" }); }
     return createJsonResponse({ status: "error" });
   } catch (err) { return createJsonResponse({ status: "error", message: err.toString() }); }
@@ -149,6 +150,37 @@ function parseDate(val) {
 
 function createJsonResponse(data) {
   return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(ContentService.MimeType.JSON);
+}
+
+function uploadPhoto(data) {
+  try {
+    var folderName = "Shark Business Slike";
+    var folder;
+    var folders = DriveApp.getFoldersByName(folderName);
+    if (folders.hasNext()) {
+      folder = folders.next();
+    } else {
+      folder = DriveApp.createFolder(folderName);
+    }
+
+    var base64Data = data.imageBase64.replace(/^data:image\/\w+;base64,/, '');
+    var blob = Utilities.newBlob(Utilities.base64Decode(base64Data), 'image/jpeg', data.filename || ('site_' + Date.now() + '.jpg'));
+    var file = folder.createFile(blob);
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+
+    var fileUrl = file.getUrl();
+    
+    // Update the last saved location with this photo link
+    var ss = SpreadsheetApp.openById(pwa_sheet_id);
+    var sheet = ss.getSheetByName('Lokacije');
+    if (sheet) {
+      sheet.getRange(sheet.getLastRow(), 7).setValue(fileUrl); 
+    }
+
+    return createJsonResponse({ status: "success", url: fileUrl });
+  } catch (e) {
+    return createJsonResponse({ status: "error", message: e.toString() });
+  }
 }
 
 // --- LOCATIONS MODULE ---

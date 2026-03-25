@@ -28,6 +28,7 @@ async function init() {
 
     // Global exposure for inline onclick
     window.handleInquiryAction = handleInquiryAction;
+    window.handleSaveLocation = handleSaveLocation;
 
     setInterval(refreshData, 300000);
 }
@@ -567,11 +568,14 @@ function filterInquiries(query) {
 
 // --- LOCATIONS MODULE ---
 function initLocations() {
-    const btn = document.getElementById('btnSaveLocation');
-    if (btn) btn.onclick = saveNewLocation;
+    // Moved to window.handleSaveLocation for direct HTML access
+    const photoInput = document.getElementById('locationPhotoInput');
+    if (photoInput) {
+        photoInput.onchange = (e) => handlePhotoUpload(e.target.files[0]);
+    }
 }
 
-async function saveNewLocation() {
+async function handleSaveLocation() {
     const btn = document.getElementById('btnSaveLocation');
     const feedback = document.getElementById('gpsFeedback');
     
@@ -579,21 +583,17 @@ async function saveNewLocation() {
         return alert("GPS nije podržan na ovom uređaju.");
     }
 
-    const note = prompt("Unesi kratku bilješku o ovoj lokaciji (npr. 'Novo gradilište - krov 200m2'):");
-    if (note === null) return; // Cancelled
+    const note = prompt("Unesi kratku bilješku o ovoj lokaciji:");
+    if (note === null) return; 
 
     btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-satellite-dish fa-spin"></i> DOJAVLJUJEM...';
+    btn.innerHTML = '<i class="fas fa-satellite-dish fa-spin"></i> SPREMAM LOKACIJU...';
     feedback.style.color = 'var(--accent-orange)';
-    feedback.innerText = "PRISTUPAM SATELITU... (Molim dopusti lokaciju ako te pita)";
-
-    console.log("Starting geolocation capture...");
+    feedback.innerText = "HVATAM SATELIT... (Provjeri dopuštenja)";
 
     navigator.geolocation.getCurrentPosition(async (pos) => {
         const lat = pos.coords.latitude;
         const lng = pos.coords.longitude;
-        
-        btn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> SPREMAM NA CLOUD...';
         
         try {
             const res = await fetch(GAS_URL, {
@@ -607,13 +607,19 @@ async function saveNewLocation() {
             });
             const data = await res.json();
             if (data.status === 'success') {
-                btn.innerHTML = '<i class="fas fa-check"></i> SPREMLJENO!';
-                feedback.innerText = `Lokacija spremljena u ${new Date().toLocaleTimeString()}`;
+                btn.innerHTML = '<i class="fas fa-check"></i> LOKACIJA SPREMLJENA!';
+                feedback.innerText = "Lokacija uspješno zapisana u Sheet.";
+                
+                // --- PHOTO OPTION ---
                 setTimeout(() => {
+                    if (confirm("Želiš li dodati sliku ovoj lokaciji?")) {
+                        document.getElementById('locationPhotoInput').click();
+                    }
+                    
                     btn.disabled = false;
                     btn.innerHTML = '<i class="fas fa-satellite"></i> SNIMI MOJU LOKACIJU';
                     refreshData();
-                }, 2000);
+                }, 1000);
             } else {
                 throw new Error(data.message);
             }
@@ -623,14 +629,38 @@ async function saveNewLocation() {
             btn.innerHTML = '<i class="fas fa-satellite"></i> SNIMI MOJU LOKACIJU';
         }
     }, (err) => {
-        let msg = "GPS greška: ";
-        if (err.code === 1) msg += "Pristup lokaciji odbijen.";
-        else if (err.code === 2) msg += "Lokacija nedostupna.";
-        else if (err.code === 3) msg += "Timeout.";
-        alert(msg);
+        alert("GPS Error: " + err.message);
         btn.disabled = false;
         btn.innerHTML = '<i class="fas fa-satellite"></i> SNIMI MOJU LOKACIJU';
-    }, { enableHighAccuracy: true, timeout: 10000 });
+    }, { enableHighAccuracy: true, timeout: 15000 });
+}
+
+async function handlePhotoUpload(file) {
+    if (!file) return;
+    
+    const feedback = document.getElementById('gpsFeedback');
+    feedback.innerText = "Komprimiram i šaljem sliku...";
+    
+    try {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = async () => {
+            const base64 = reader.result;
+            const res = await fetch(GAS_URL, {
+                method: 'POST',
+                body: JSON.stringify({
+                    action: 'uploadPhoto',
+                    imageBase64: base64,
+                    filename: `shark_site_${Date.now()}.jpg`
+                })
+            });
+            const data = await res.json();
+            if (data.status === 'success') {
+                feedback.innerText = "Slika uspješno dodana! ✅";
+                refreshData();
+            } else { alert("Greška kod slike: " + data.message); }
+        };
+    } catch (e) { alert("Greška kod uploada!"); }
 }
 
 function renderLocations() {

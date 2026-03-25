@@ -115,14 +115,15 @@
                     <i class="fas fa-map-marker-alt hero-icon" style="color: var(--accent-cyan)"></i>
                     <h2>Shark Sites 🗺️</h2>
                     <p>Snimi svoju trenutnu GPS lokaciju (npr. novo gradilište ili zanimljiv objekt) kako bi je kasnije lako pronašao.</p>
-                    <button class="btn-cyan" id="btnSaveLocation" style="margin-top: 10px; width: 100%;">
+                    <button class="btn-cyan" id="btnSaveLocation" onclick="handleSaveLocation()" style="margin-top: 10px; width: 100%;">
                         <i class="fas fa-satellite"></i> SNIMI MOJU LOKACIJU
                     </button>
+                    <input type="file" id="locationPhotoInput" accept="image/*" capture="environment" style="display:none;">
                     <div id="gpsFeedback" style="font-size: 0.7rem; color: var(--text-secondary); margin-top: 10px; font-weight: 700;"></div>
                 </div>
 
                 <div class="action-header" style="margin-top: 25px;">
-                    <h3 style="font-family:'Orbitron'; font-size:0.7rem; color:var(--accent-cyan);">SPREMLJENA GRADILIŠTA</h3>
+                    <h3 style="font-family:'Orbitron'; font-size:0.7rem; color:var(--accent-cyan);">SPREMLJENE LOKACIJE</h3>
                 </div>
                 <div id="locationsList" class="list-container" style="margin-top: 15px;"></div>
             </section>
