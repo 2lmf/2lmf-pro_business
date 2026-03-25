@@ -595,8 +595,10 @@ async function handleSaveLocation() {
         const lng = pos.coords.longitude;
         
         try {
+            console.log("Sending to GAS:", { lat, lng, note });
             const res = await fetch(GAS_URL, {
                 method: 'POST',
+                headers: { 'Content-Type': 'text/plain' },
                 body: JSON.stringify({
                     action: 'saveLocation',
                     lat: lat,
@@ -604,6 +606,9 @@ async function handleSaveLocation() {
                     note: note || "Bez bilješke"
                 })
             });
+            
+            if (!res.ok) throw new Error(`HTTP greška! status: ${res.status}`);
+            
             const data = await res.json();
             if (data.status === 'success') {
                 btn.innerHTML = '<i class="fas fa-check"></i> LOKACIJA SPREMLJENA!';
@@ -647,6 +652,7 @@ async function handlePhotoUpload(file) {
             const base64 = reader.result;
             const res = await fetch(GAS_URL, {
                 method: 'POST',
+                headers: { 'Content-Type': 'text/plain' },
                 body: JSON.stringify({
                     action: 'uploadPhoto',
                     imageBase64: base64,
