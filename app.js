@@ -583,9 +583,8 @@ async function handleSaveLocation() {
         return alert("GPS nije podržan na ovom uređaju.");
     }
 
-    const note = prompt("Unesi kratku bilješku o ovoj lokaciji:");
-    if (note === null) return; 
-
+    const note = "Zabilježena lokacija"; // Removed prompt as per user request
+    
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-satellite-dish fa-spin"></i> SPREMAM LOKACIJU...';
     feedback.style.color = 'var(--accent-orange)';

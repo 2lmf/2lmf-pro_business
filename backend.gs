@@ -171,7 +171,8 @@ function uploadPhoto(data) {
     var fileUrl = file.getUrl();
     
     // Update the last saved location with this photo link
-    var ss = SpreadsheetApp.openById(pwa_sheet_id);
+    var ssId = PropertiesService.getScriptProperties().getProperty("SHEET_ID") || "1YmRZMeomWxAmfi6rsLN6qKrHrrAeHOnGVbnfsZXP3w4";
+    var ss = SpreadsheetApp.openById(ssId);
     var sheet = ss.getSheetByName('Lokacije');
     if (sheet) {
       sheet.getRange(sheet.getLastRow(), 7).setValue(fileUrl); 
