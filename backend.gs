@@ -194,8 +194,8 @@ function saveLocation(ss, data) {
   }
 
   var now = new Date();
-  var datum = Utilities.formatDate(now, 'GMT+1', 'dd.MM.yyyy');
-  var sat = Utilities.formatDate(now, 'GMT+1', 'HH:mm');
+  var datum = Utilities.formatDate(now, 'Europe/Zagreb', 'dd.MM.yyyy');
+  var sat = Utilities.formatDate(now, 'Europe/Zagreb', 'HH:mm');
   var lat = data.lat;
   var lng = data.lng;
   var mapsLink = "https://www.google.com/maps?q=" + lat + "," + lng;

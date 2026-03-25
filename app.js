@@ -607,9 +607,16 @@ async function handleSaveLocation() {
                 })
             });
             
-            if (!res.ok) throw new Error(`HTTP greška! status: ${res.status}`);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
             
-            const data = await res.json();
+            const text = await res.text();
+            let data;
+            try {
+                data = JSON.parse(text);
+            } catch (e) {
+                throw new Error("Server je vratio neispravan format: " + text.substring(0, 100));
+            }
+
             if (data.status === 'success') {
                 btn.innerHTML = '<i class="fas fa-check"></i> LOKACIJA SPREMLJENA!';
                 feedback.innerText = "Lokacija uspješno zapisana u Sheet.";
