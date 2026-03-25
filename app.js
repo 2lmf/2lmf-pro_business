@@ -8,7 +8,8 @@ let state = {
     charts: { yearly: null, monthly: null },
     catalog: [],
     cart: [],
-    activeCategory: 'Sve'
+    activeCategory: 'Sve',
+    locations: []
 };
 
 document.addEventListener('DOMContentLoaded', init);
@@ -582,8 +583,11 @@ async function saveNewLocation() {
     if (note === null) return; // Cancelled
 
     btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> HVATAM GPS...';
-    feedback.innerText = "Molim pričekaj, dohvaćam tvoju točnu lokaciju...";
+    btn.innerHTML = '<i class="fas fa-satellite-dish fa-spin"></i> DOJAVLJUJEM...';
+    feedback.style.color = 'var(--accent-orange)';
+    feedback.innerText = "PRISTUPAM SATELITU... (Molim dopusti lokaciju ako te pita)";
+
+    console.log("Starting geolocation capture...");
 
     navigator.geolocation.getCurrentPosition(async (pos) => {
         const lat = pos.coords.latitude;
